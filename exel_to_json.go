@@ -34,6 +34,7 @@ func findLenTables(row []string) []int {
 		}
 	}
 	lenArr := len(arr)
+	fmt.Println(arr)
 	for i := 0; i < lenArr; i++ {
 		if arr[i] == 0 {
 			start := i
@@ -56,6 +57,8 @@ func ExelToJson() {
 	file, _ := excelize.OpenFile("Соревнования.xlsx")
 	rows, err := file.GetRows("URS_NC")
 	rows = rows[3:]
+	lenTables := findLenTables(rows[0])
+	fmt.Println(lenTables)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -64,12 +67,12 @@ func ExelToJson() {
 	// 	fmt.Println(name)
 	// }
 	for i := 0; i < len(rows); i++ {
-		curRow := rows[i][1:6]
+		// curRow := rows[i][1:6]
 
 		// for _, col := range curRow {
 		// 	fmt.Println(col)
 		// }
-		fmt.Println(curRow)
+		// fmt.Println(curRow)
 		// fmt.Printf("%T", rows[i])
 		if i > 2 {
 			break
