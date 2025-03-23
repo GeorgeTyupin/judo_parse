@@ -68,4 +68,3 @@ for name in sheet_names:
 with open('Соревнования.json', 'w', encoding="utf-8") as f:
     json.dump(to_json, f, indent=4)
 
-
