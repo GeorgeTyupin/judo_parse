@@ -10,14 +10,14 @@ import (
 )
 
 type Note struct {
-	TOURNAMENT      string
-	GENDER          string
-	WEIGHT_CATEGORY string
-	RANK            int
-	NAME            string
-	FIRSTNAME       string
-	JUDOKA          string
-	COUNTRY         string
+	TOURNAMENT     string
+	GENDER         string
+	WeightCategory string
+	RANK           int
+	NAME           string
+	FIRSTNAME      string
+	JUDOKA         string
+	COUNTRY        string
 }
 
 func decode(file *os.File) (ExelSheet, error) {
@@ -31,11 +31,11 @@ func decode(file *os.File) (ExelSheet, error) {
 	return list, nil
 }
 
-func save_note(note Note, f *excelize.File, i int) {
+func saveNote(note Note, f *excelize.File, i int) {
 	rowNum := i + 2
 	f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
 	f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.GENDER)
-	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.WEIGHT_CATEGORY)
+	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.WeightCategory)
 	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.RANK)
 	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.NAME)
 	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.FIRSTNAME)
@@ -46,8 +46,8 @@ func save_note(note Note, f *excelize.File, i int) {
 func JsonToExel() {
 	// exel_to_json()
 
-	file, err_exel := excelize.OpenFile("Сводная таблица.xlsx")
-	if err_exel != nil {
+	file, errExel := excelize.OpenFile("Сводная таблица.xlsx")
+	if errExel != nil {
 		file = excelize.NewFile()
 	}
 
@@ -59,33 +59,33 @@ func JsonToExel() {
 		file.SetCellValue("Sheet1", cell, header)
 	}
 
-	json_file, err_json := os.Open("Соревнования.json")
-	if err_json != nil {
+	jsonFile, errJson := os.Open("Соревнования.json")
+	if errJson != nil {
 		panic("Файл json не удалось прочесть")
 	}
-	defer json_file.Close()
+	defer jsonFile.Close()
 
-	data, err := decode(json_file)
+	data, err := decode(jsonFile)
 	if err != nil {
 		panic(err)
 	}
 
 	// fmt.Println(data["URS_NC"])
-	var cnt int = 0
+	var cnt = 0
 	for _, sheet := range data {
 		for _, tournament := range sheet {
-			for category_name, category := range tournament.WeightCategories {
+			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
 					var note Note
 					note.TOURNAMENT = tournament.Name
 					note.GENDER = tournament.Gender
-					note.WEIGHT_CATEGORY = category_name
+					note.WeightCategory = categoryName
 					note.RANK = man.Rank
 					note.NAME = man.Name
 					note.FIRSTNAME = man.FirstName
 					note.JUDOKA = man.JUDOKA
 					note.COUNTRY = man.Country
-					save_note(note, file, cnt)
+					saveNote(note, file, cnt)
 					cnt++
 				}
 			}

@@ -2,23 +2,14 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
 
-// var re = regexp.MustCompile(`\S+`)
-
-// func deleteSpaces(row []string) []string {
-// 	var newRow []string
-// 	for _, elem := range row {
-// 		if !re.MatchString(elem) {
-// 			continue
-// 		}
-// 		newRow = append(newRow, elem)
-// 	}
-// 	return newRow
-// }
+var re = regexp.MustCompile(`\S+`)
+var reNum = regexp.MustCompile(`\d+`)
 
 func findLenTables(row []string) []int {
 	var lenTables []int
@@ -34,8 +25,7 @@ func findLenTables(row []string) []int {
 		}
 	}
 	lenArr := len(arr)
-	fmt.Println(arr)
-	for i := 0; i < lenArr; i++ {
+	for i := 1; i < lenArr; i++ {
 		if arr[i] == 0 {
 			start := i
 			for i < lenArr && arr[i] == 0 {
@@ -58,25 +48,33 @@ func ExelToJson() {
 	rows, err := file.GetRows("URS_NC")
 	rows = rows[3:]
 	lenTables := findLenTables(rows[0])
-	fmt.Println(lenTables)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	// for _, name := range file.GetSheetMap() {
-	// 	fmt.Println(name)
-	// }
-	for i := 0; i < len(rows); i++ {
-		// curRow := rows[i][1:6]
 
-		// for _, col := range curRow {
-		// 	fmt.Println(col)
-		// }
-		// fmt.Println(curRow)
-		// fmt.Printf("%T", rows[i])
-		if i > 2 {
+	left := 1
+	cnt := 0
+	for _, lenCurRow := range lenTables {
+		right := left + lenCurRow
+		for _, row := range rows {
+			if lenCurRow > len(row) {
+				continue
+			}
+
+			curRow := row[left:right]
+			if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
+				continue
+			}
+			fmt.Println(curRow)
+
+		}
+		left = right + 1
+
+		if cnt > 0 {
 			break
 		}
+		cnt++
 	}
 
 }
