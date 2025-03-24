@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 
+
 # Путь к файлу
 file_path = 'Соревнования.xlsx'
 
