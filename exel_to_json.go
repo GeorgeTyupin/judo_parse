@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"regexp"
 	"strings"
 
@@ -45,36 +48,93 @@ func findLenTables(row []string) []int {
 
 func ExelToJson() {
 	file, _ := excelize.OpenFile("Соревнования.xlsx")
-	rows, err := file.GetRows("URS_NC")
-	rows = rows[3:]
-	lenTables := findLenTables(rows[0])
-	if err != nil {
-		fmt.Println(err)
-		return
+	sheetList := file.GetSheetList()
+	toJson := make(ExelSheet)
+
+	for _, curSheet := range sheetList {
+		rows, err := file.GetRows(curSheet)
+		rows = rows[3:]
+		lenTables := findLenTables(rows[0])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		left := 1
+		cnt := 0
+
+		for _, lenCurRow := range lenTables {
+			var tournament Tournament
+			curWeightCategory := make(map[string][]Judoka)
+			right := left + lenCurRow
+
+			for i, row := range rows {
+				if lenCurRow > len(row) {
+					continue
+				}
+
+				curRow := row[left:right]
+				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
+					continue
+				}
+
+				switch i {
+				case 0:
+					tournament.Name = curRow[0]
+				case 1:
+					tournament.Description = curRow[0]
+				case 2:
+					tournament.Date = curRow[0]
+				case 3:
+					tournament.Gender = curRow[0]
+				default:
+					var curWeightCategoryName string
+					if reNum.MatchString(curRow[0]) {
+						if len(curRow[0]) > 2 {
+							curWeightCategoryName = curRow[0]
+							curWeightCategory[curWeightCategoryName] = make([]Judoka, 0)
+						} else {
+							athlete := Judoka{
+								Rank:      curRow[0],
+								Name:      curRow[1],
+								FirstName: curRow[2],
+								JUDOKA:    curRow[3],
+							}
+							curWeightCategory[curWeightCategoryName] = append(curWeightCategory[curWeightCategoryName], athlete)
+						}
+					} else {
+						continue
+					}
+				}
+			}
+			tournament.WeightCategories = curWeightCategory
+			if _, exists := toJson[curSheet]; !exists {
+				toJson[curSheet] = make([]Tournament, 0)
+			}
+			toJson[curSheet] = append(toJson[curSheet], tournament)
+			left = right + 1
+
+			if cnt > 0 {
+				break
+			}
+			cnt++
+		}
 	}
 
-	left := 1
-	cnt := 0
-	for _, lenCurRow := range lenTables {
-		right := left + lenCurRow
-		for _, row := range rows {
-			if lenCurRow > len(row) {
-				continue
-			}
+	jsonData, err := json.MarshalIndent(toJson, "", "    ")
+	if err != nil {
+		log.Fatalf("Ошибка маршалинга: %v", err)
+	}
 
-			curRow := row[left:right]
-			if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
-				continue
-			}
-			fmt.Println(curRow)
+	newJson, err := os.Create("Соревнования.json")
+	if err != nil {
+		log.Fatalf("Ошибка создания файла: %v", err)
+	}
+	defer newJson.Close()
 
-		}
-		left = right + 1
-
-		if cnt > 0 {
-			break
-		}
-		cnt++
+	_, err = newJson.Write(jsonData)
+	if err != nil {
+		log.Fatalf("Ошибка записи в файл: %v", err)
 	}
 
 }

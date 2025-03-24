@@ -13,7 +13,7 @@ type Note struct {
 	TOURNAMENT     string
 	GENDER         string
 	WeightCategory string
-	RANK           int
+	RANK           string
 	NAME           string
 	FIRSTNAME      string
 	JUDOKA         string

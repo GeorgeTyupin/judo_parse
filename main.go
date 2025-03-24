@@ -1,7 +1,7 @@
 package main
 
 type Judoka struct {
-	Rank      int    `json:"RANK"`
+	Rank      string `json:"RANK"`
 	Name      string `json:"NAME"`
 	FirstName string `json:"FIRSTNAME"`
 	JUDOKA    string `json:"JUDOKA"`
