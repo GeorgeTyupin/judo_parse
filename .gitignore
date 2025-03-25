@@ -1,4 +1,7 @@
 *.exe
 .vscode
 .idea
+.xlsx
+.json
+!Соревнования.xlsx
 ~*
