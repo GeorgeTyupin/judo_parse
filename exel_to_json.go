@@ -65,6 +65,7 @@ func ExelToJson() {
 
 		for _, lenCurRow := range lenTables {
 			var tournament Tournament
+			var curWeightCategoryName string
 			curWeightCategory := make(map[string][]Judoka)
 			right := left + lenCurRow
 
@@ -88,7 +89,6 @@ func ExelToJson() {
 				case 3:
 					tournament.Gender = curRow[0]
 				default:
-					var curWeightCategoryName string
 					if reNum.MatchString(curRow[0]) {
 						if len(curRow[0]) > 2 {
 							curWeightCategoryName = curRow[0]
@@ -100,6 +100,7 @@ func ExelToJson() {
 								FirstName: curRow[2],
 								JUDOKA:    curRow[3],
 							}
+
 							curWeightCategory[curWeightCategoryName] = append(curWeightCategory[curWeightCategoryName], athlete)
 						}
 					} else {

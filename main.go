@@ -20,4 +20,5 @@ type ExelSheet map[string][]Tournament
 
 func main() {
 	ExelToJson()
+	JsonToExel()
 }
