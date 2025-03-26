@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -25,28 +26,43 @@ type ExelSheet map[string][]Tournament
 
 var FILE string
 
+func timer(lastSeconds int, wg *sync.WaitGroup) {
+
+	for i := range lastSeconds {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			time.Sleep(time.Second * time.Duration(i))
+			fmt.Println(lastSeconds-i, " сек")
+		}()
+	}
+
+}
+
 func main() {
 	var choise string
 
 	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours")
 	fmt.Scanln(&choise)
+	lastSeconds := 2
+	wg := &sync.WaitGroup{}
+
 	switch choise {
 	case "1":
 		FILE = "USSR_tours"
+		fmt.Println("Программа выполнилась. И автоматически завершится через:")
+		timer(lastSeconds, wg)
 	case "2":
 		FILE = "INT_tours"
+		fmt.Println("Программа выполнилась. И автоматически завершится через:")
+		timer(lastSeconds, wg)
 	default:
+		lastSeconds = 3
 		fmt.Println("Ошибка ввода, попробуйте еще раз. Программа завершится сама через:")
-		for i := range 3 {
-			go func() {
-				time.Sleep(time.Second * time.Duration(i))
-				fmt.Println(3-i, " сек")
-			}()
-		}
-		time.Sleep(time.Millisecond * 3001)
+		timer(lastSeconds, wg)
 		return
 	}
-
+	wg.Wait()
 	ExelToJson()
 	JsonToExel()
 }
