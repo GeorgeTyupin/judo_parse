@@ -3,5 +3,5 @@
 .idea
 *.xlsx
 *.json
-!Соревнования.xlsx
+!*_tours.xlsx
 ~*

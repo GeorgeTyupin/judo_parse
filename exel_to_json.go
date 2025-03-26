@@ -47,13 +47,13 @@ func findLenTables(row []string) []int {
 }
 
 func ExelToJson() {
-	file, _ := excelize.OpenFile("Соревнования.xlsx")
+	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", FILE))
 	sheetList := file.GetSheetList()
 	toJson := make(ExelSheet)
 
 	for _, curSheet := range sheetList {
 		rows, err := file.GetRows(curSheet)
-		rows = rows[3:]
+		rows = rows[5:]
 		lenTables := findLenTables(rows[0])
 		if err != nil {
 			fmt.Println(err)
@@ -127,7 +127,7 @@ func ExelToJson() {
 		log.Fatalf("Ошибка маршалинга: %v", err)
 	}
 
-	newJson, err := os.Create("Соревнования.json")
+	newJson, err := os.Create(fmt.Sprintf("%s.json", FILE))
 	if err != nil {
 		log.Fatalf("Ошибка создания файла: %v", err)
 	}
