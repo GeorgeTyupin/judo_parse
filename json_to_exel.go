@@ -59,7 +59,7 @@ func JsonToExel() {
 		file.SetCellValue("Sheet1", cell, header)
 	}
 
-	jsonFile, errJson := os.Open("Соревнования.json")
+	jsonFile, errJson := os.Open(fmt.Sprintf("%s.json", FILE))
 	if errJson != nil {
 		panic("Файл json не удалось прочесть")
 	}
