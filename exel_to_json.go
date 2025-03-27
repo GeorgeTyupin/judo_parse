@@ -61,7 +61,6 @@ func ExelToJson() {
 		}
 
 		left := 1
-		cnt := 0
 
 		for _, lenCurRow := range lenTables {
 			var tournament Tournament
@@ -70,9 +69,12 @@ func ExelToJson() {
 			right := left + lenCurRow
 
 			for i, row := range rows {
-				if lenCurRow > len(row) {
+				if lenCurRow > len(row) || right > len(row) {
 					continue
 				}
+				// if right > len(row) {
+				// 	continue
+				// }
 
 				curRow := row[left:right]
 				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
@@ -113,12 +115,8 @@ func ExelToJson() {
 				toJson[curSheet] = make([]Tournament, 0)
 			}
 			toJson[curSheet] = append(toJson[curSheet], tournament)
-			left = right + 1
 
-			if cnt > 0 {
-				break
-			}
-			cnt++
+			left = right + 1
 		}
 	}
 
