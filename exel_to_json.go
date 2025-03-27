@@ -101,6 +101,7 @@ func ExelToJson() {
 								Name:      curRow[1],
 								FirstName: curRow[2],
 								JUDOKA:    curRow[3],
+								Country:   curRow[4],
 							}
 
 							curWeightCategory[curWeightCategoryName] = append(curWeightCategory[curWeightCategoryName], athlete)
