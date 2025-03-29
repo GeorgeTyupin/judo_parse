@@ -52,6 +52,7 @@ func renderExel() (ExelSheet, error) {
 	sheetList := file.GetSheetList()
 	toJson := make(ExelSheet)
 
+	//Проход по всем листам
 	for _, curSheet := range sheetList {
 		rows, err := file.GetRows(curSheet)
 		rows = rows[4:]
@@ -67,37 +68,52 @@ func renderExel() (ExelSheet, error) {
 
 		left := 1
 
+		//Проход по всей таблице
 		for _, lenCurRow := range lenTables {
 			var tournament Tournament
 			var curWeightCategoryName string
 			curWeightCategory := make(map[string][]Judoka)
 			right := left + lenCurRow
 
-			for i, row := range rows {
+			//Проход по турниру
+			// for i, row := range rows {
+			for i := 0; i < len(rows); i++ {
+				row := rows[i]
 				if lenCurRow > len(row) || right > len(row) {
 					continue
 				}
+
+				isNewTournament := false
 				curRow := row[left:right]
 
-				if curRow[0] == "_" {
-
-					fmt.Println("начало турнира", curSheet)
-					continue
-				}
 				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
 					continue
 				}
 
-				switch i {
-				case 0:
-					tournament.Name = curRow[0]
-				case 1:
-					tournament.Description = curRow[0]
-				case 2:
-					tournament.Date = curRow[0]
-				case 3:
-					tournament.Gender = curRow[0]
-				default:
+				if curRow[0] == "_" {
+					isNewTournament = true
+					fmt.Println("начало турнира", curSheet)
+					i++
+				}
+
+				if isNewTournament {
+					//мнимый цикл для прохода по шапке турнира
+					for j := range 4 {
+						tournamentRow := rows[i+j][left:right]
+						switch j {
+						case 0:
+							tournament.Name = tournamentRow[0]
+						case 1:
+							tournament.Description = tournamentRow[0]
+						case 2:
+							tournament.Date = tournamentRow[0]
+						case 3:
+							tournament.Gender = tournamentRow[0]
+							isNewTournament = false
+						}
+					}
+					i += 3
+				} else {
 					if reNum.MatchString(curRow[0]) {
 						if len(curRow[0]) > 2 {
 							curWeightCategoryName = curRow[0]
@@ -120,6 +136,7 @@ func renderExel() (ExelSheet, error) {
 						continue
 					}
 				}
+
 			}
 			tournament.WeightCategories = curWeightCategory
 			if _, exists := toJson[curSheet]; !exists {
