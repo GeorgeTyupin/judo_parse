@@ -42,7 +42,7 @@ func findLenTables(row []string) []int {
 			i++
 		}
 	}
-
+	fmt.Println(lenTables)
 	return lenTables
 }
 
@@ -53,8 +53,8 @@ func ExelToJson() {
 
 	for _, curSheet := range sheetList {
 		rows, err := file.GetRows(curSheet)
-		rows = rows[5:]
-		lenTables := findLenTables(rows[0])
+		rows = rows[4:]
+		lenTables := findLenTables(rows[1])
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -72,11 +72,15 @@ func ExelToJson() {
 				if lenCurRow > len(row) || right > len(row) {
 					continue
 				}
-				// if right > len(row) {
-				// 	continue
-				// }
-
 				curRow := row[left:right]
+				// if i == 0 {
+				// 	fmt.Println(lenCurRow)
+				// }
+				if curRow[0] == "_" {
+
+					fmt.Println("начало турнира")
+					continue
+				}
 				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
 					continue
 				}
@@ -101,7 +105,10 @@ func ExelToJson() {
 								Name:      curRow[1],
 								FirstName: curRow[2],
 								JUDOKA:    curRow[3],
-								Country:   curRow[4],
+							}
+
+							if lenCurRow > 4 {
+								athlete.Country = curRow[4]
 							}
 
 							curWeightCategory[curWeightCategoryName] = append(curWeightCategory[curWeightCategoryName], athlete)
