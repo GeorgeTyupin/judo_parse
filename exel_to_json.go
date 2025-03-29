@@ -27,6 +27,7 @@ func findLenTables(row []string) []int {
 			arr = append(arr, 0)
 		}
 	}
+
 	lenArr := len(arr)
 	for i := 1; i < lenArr; i++ {
 		if arr[i] == 0 {
@@ -42,11 +43,11 @@ func findLenTables(row []string) []int {
 			i++
 		}
 	}
-	fmt.Println(lenTables)
+
 	return lenTables
 }
 
-func ExelToJson() {
+func renderExel() (ExelSheet, error) {
 	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", FILE))
 	sheetList := file.GetSheetList()
 	toJson := make(ExelSheet)
@@ -55,9 +56,13 @@ func ExelToJson() {
 		rows, err := file.GetRows(curSheet)
 		rows = rows[4:]
 		lenTables := findLenTables(rows[1])
+
+		if lenTables[0] > 5 {
+			fmt.Println(curSheet)
+		}
+
 		if err != nil {
-			fmt.Println(err)
-			return
+			return make(ExelSheet), err
 		}
 
 		left := 1
@@ -73,12 +78,10 @@ func ExelToJson() {
 					continue
 				}
 				curRow := row[left:right]
-				// if i == 0 {
-				// 	fmt.Println(lenCurRow)
-				// }
+
 				if curRow[0] == "_" {
 
-					fmt.Println("начало турнира")
+					fmt.Println("начало турнира", curSheet)
 					continue
 				}
 				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
@@ -128,7 +131,16 @@ func ExelToJson() {
 		}
 	}
 
-	jsonData, err := json.MarshalIndent(toJson, "", "    ")
+	return toJson, nil
+}
+
+func ExelToJson() {
+	file, err := renderExel()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	jsonData, err := json.MarshalIndent(file, "", "    ")
 	if err != nil {
 		log.Fatalf("Ошибка маршалинга: %v", err)
 	}
@@ -143,5 +155,4 @@ func ExelToJson() {
 	if err != nil {
 		log.Fatalf("Ошибка записи в файл: %v", err)
 	}
-
 }
