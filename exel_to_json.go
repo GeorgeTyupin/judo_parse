@@ -79,7 +79,7 @@ func renderExel() (ExelSheet, error) {
 			// for i, row := range rows {
 			for i := 0; i < len(rows); i++ {
 				row := rows[i]
-				if lenCurRow > len(row) || right > len(row) {
+				if lenCurRow > len(row) || left > len(row) {
 					continue
 				}
 
@@ -92,7 +92,7 @@ func renderExel() (ExelSheet, error) {
 
 				if curRow[0] == "_" {
 					isNewTournament = true
-					fmt.Println("начало турнира", curSheet)
+					// fmt.Println("начало турнира", curSheet)
 					i++
 				}
 
@@ -115,8 +115,12 @@ func renderExel() (ExelSheet, error) {
 					i += 3
 				} else {
 					if reNum.MatchString(curRow[0]) {
+
 						if len(curRow[0]) > 2 {
 							curWeightCategoryName = curRow[0]
+							if curWeightCategoryName == "National Tournament Tbilisi - 1993" {
+								fmt.Println(rows[i-1])
+							}
 							curWeightCategory[curWeightCategoryName] = make([]Judoka, 0)
 						} else {
 							athlete := Judoka{
