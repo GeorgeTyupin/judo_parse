@@ -54,6 +54,9 @@ func renderExel() (ExelSheet, error) {
 
 	//Проход по всем листам
 	for _, curSheet := range sheetList {
+		if string(curSheet[0]) == "_" {
+			continue
+		}
 		rows, err := file.GetRows(curSheet)
 		rows = rows[4:]
 		lenTables := findLenTables(rows[1])
