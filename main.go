@@ -44,8 +44,10 @@ func main() {
 
 	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours")
 	fmt.Scanln(&choise)
+	// choise = "1"
 	lastSeconds := 2
 	wg := &sync.WaitGroup{}
+	flag := false
 
 	switch choise {
 	case "1":
@@ -60,9 +62,12 @@ func main() {
 		lastSeconds = 3
 		fmt.Println("Ошибка ввода, попробуйте еще раз. Программа завершится сама через:")
 		timer(lastSeconds, wg)
-		return
+		flag = true
 	}
 	wg.Wait()
+	if flag {
+		return
+	}
 	ExelToJson()
 	JsonToExel()
 }
