@@ -1,6 +1,7 @@
 *.exe
 .vscode
 .idea
+.zed
 *.xlsx
 *.json
 !*_tours.xlsx
