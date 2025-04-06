@@ -48,6 +48,7 @@ func findLenTables(row []string) []int {
 }
 
 func renderExel() (ExelSheet, error) {
+	// cnt := 0
 	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", FILE))
 	sheetList := file.GetSheetList()
 	toJson := make(ExelSheet)
@@ -60,10 +61,10 @@ func renderExel() (ExelSheet, error) {
 		rows, err := file.GetRows(curSheet)
 		rows = rows[4:]
 		lenTables := findLenTables(rows[1])
-
-		if lenTables[0] > 5 {
-			fmt.Println(curSheet)
+		if curSheet == "URS_FEM_IT" {
+			fmt.Println(lenTables)
 		}
+		fmt.Println(curSheet)
 
 		if err != nil {
 			return make(ExelSheet), err
@@ -72,17 +73,17 @@ func renderExel() (ExelSheet, error) {
 		left := 1
 
 		//Проход по всей таблице
-		for _, lenCurRow := range lenTables {
+		for _, lenCurTable := range lenTables {
 			var tournament Tournament
 			var curWeightCategoryName string
 			curWeightCategory := make(map[string][]Judoka)
-			right := left + lenCurRow
+			right := left + lenCurTable
 
 			//Проход по турниру
 			// for i, row := range rows {
 			for i := 0; i < len(rows); i++ {
 				row := rows[i]
-				if lenCurRow > len(row) || left > len(row) {
+				if left > len(row) {
 					continue
 				}
 
@@ -95,14 +96,17 @@ func renderExel() (ExelSheet, error) {
 
 				if curRow[0] == "_" {
 					isNewTournament = true
-					// fmt.Println("начало турнира", curSheet)
 					i++
 				}
 
 				if isNewTournament {
 					//мнимый цикл для прохода по шапке турнира
 					for j := range 4 {
-						tournamentRow := rows[i+j][left:right]
+						var tournamentRow []string
+						if right > len(rows[i+j]) {
+							continue
+						}
+						tournamentRow = rows[i+j][left:right]
 						switch j {
 						case 0:
 							tournament.Name = tournamentRow[0]
@@ -121,9 +125,6 @@ func renderExel() (ExelSheet, error) {
 
 						if len(curRow[0]) > 2 {
 							curWeightCategoryName = curRow[0]
-							if curWeightCategoryName == "National Tournament Tbilisi - 1993" {
-								fmt.Println(rows[i-1])
-							}
 							curWeightCategory[curWeightCategoryName] = make([]Judoka, 0)
 						} else {
 							athlete := Judoka{
@@ -131,10 +132,9 @@ func renderExel() (ExelSheet, error) {
 								Name:      curRow[1],
 								FirstName: curRow[2],
 								JUDOKA:    curRow[3],
-								Country:   curRow[4],
 							}
 
-							if lenCurRow > 4 {
+							if lenCurTable > 4 {
 								athlete.Country = curRow[4]
 							}
 
