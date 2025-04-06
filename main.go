@@ -43,8 +43,8 @@ func main() {
 	var choise string
 
 	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours")
-	fmt.Scanln(&choise)
-	// choise = "1"
+	// fmt.Scanln(&choise)
+	choise = "1"
 	lastSeconds := 2
 	wg := &sync.WaitGroup{}
 	flag := false
