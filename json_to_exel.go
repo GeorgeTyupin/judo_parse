@@ -11,6 +11,8 @@ import (
 
 type Note struct {
 	TOURNAMENT     string
+	TOUR_TYPE      string
+	DATE           string
 	GENDER         string
 	WeightCategory string
 	RANK           string
@@ -34,24 +36,24 @@ func decode(file *os.File) (ExelSheet, error) {
 func saveNote(note Note, f *excelize.File, i int) {
 	rowNum := i + 2
 	f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
-	f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.GENDER)
-	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.WeightCategory)
-	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.RANK)
-	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.NAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.FIRSTNAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.JUDOKA)
-	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.COUNTRY)
+	f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.TOUR_TYPE)
+	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.DATE)
+	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.GENDER)
+	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.WeightCategory)
+	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.RANK)
+	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.NAME)
+	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.FIRSTNAME)
+	f.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.JUDOKA)
+	f.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.COUNTRY)
 }
 
 func JsonToExel() {
-	// exel_to_json()
-
 	file, errExel := excelize.OpenFile("Сводная таблица.xlsx")
 	if errExel != nil {
 		file = excelize.NewFile()
 	}
 
-	headers := []string{"TOURNAMENT", "GENDER", "WEIGHT_CATEGORY", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "COUNTRY"}
+	headers := []string{"TOURNAMENT", "TOUR TYPE", "DATE", "GENDER", "WEIGHT_CATEGORY", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "COUNTRY"}
 
 	// Записываем заголовки в первую строку
 	for i, header := range headers {
@@ -76,15 +78,18 @@ func JsonToExel() {
 		for _, tournament := range sheet {
 			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
-					var note Note
-					note.TOURNAMENT = tournament.Name
-					note.GENDER = tournament.Gender
-					note.WeightCategory = categoryName
-					note.RANK = man.Rank
-					note.NAME = man.Name
-					note.FIRSTNAME = man.FirstName
-					note.JUDOKA = man.JUDOKA
-					note.COUNTRY = man.Country
+					note := Note{
+						TOURNAMENT:     tournament.Name,
+						TOUR_TYPE:      tournament.Description,
+						DATE:           tournament.Date,
+						GENDER:         tournament.Gender,
+						WeightCategory: categoryName,
+						RANK:           man.Rank,
+						NAME:           man.Name,
+						FIRSTNAME:      man.FirstName,
+						JUDOKA:         man.JUDOKA,
+						COUNTRY:        man.Country,
+					}
 					saveNote(note, file, cnt)
 					cnt++
 				}
