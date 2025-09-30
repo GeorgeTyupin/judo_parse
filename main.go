@@ -2,25 +2,8 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
-
-type Judoka struct {
-	Rank      string `json:"RANK"`
-	Name      string `json:"NAME"`
-	FirstName string `json:"FIRSTNAME"`
-	JUDOKA    string `json:"JUDOKA"`
-	Country   string `json:"COUNTRY"`
-}
-
-type Tournament struct {
-	Name             string              `json:"name"`
-	Description      string              `json:"description"`
-	Date             string              `json:"date"`
-	Gender           string              `json:"gender"`
-	WeightCategories map[string][]Judoka `json:"weight_categories"`
-}
-
-type ExelSheet map[string][]Tournament
 
 var FILE string
 
@@ -34,13 +17,16 @@ func main() {
 	switch choise {
 	case "1":
 		FILE = "USSR_tours"
-		fmt.Println("Программа выполнилась.")
 	case "2":
 		FILE = "INT_tours"
-		fmt.Println("Программа выполнилась.")
 	default:
 		fmt.Println("Ошибка ввода, попробуйте еще раз.")
 	}
+
+	start := time.Now()
+
 	ExelToJson()
 	JsonToExel()
+
+	fmt.Println("Выполнение заняло ", time.Since(start))
 }

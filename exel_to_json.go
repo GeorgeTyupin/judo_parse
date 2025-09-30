@@ -47,8 +47,114 @@ func findLenTables(row []string) []int {
 	return lenTables
 }
 
+func isValidDataRow(curRow []string) bool {
+	if len(curRow) == 0 {
+		return false
+	}
+	return re.MatchString(curRow[0]) && !(reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2 && !re.MatchString(curRow[1]))
+}
+
+func readTournamentHeader(rows [][]string, i, left, right int) (Tournament, int) {
+	var tournament Tournament
+
+	for j := 0; j < 4; j++ {
+		if i+j >= len(rows) || left >= len(rows[i+j]) {
+			continue
+		}
+
+		var tournamentRow []string
+		if right > len(rows[i+j]) {
+			tournamentRow = rows[i+j][left:]
+		} else {
+			tournamentRow = rows[i+j][left:right]
+		}
+
+		if len(tournamentRow) == 0 {
+			continue
+		}
+
+		switch j {
+		case 0:
+			tournament.Name = tournamentRow[0]
+		case 1:
+			tournament.Description = tournamentRow[0]
+		case 2:
+			tournament.Date = tournamentRow[0]
+		case 3:
+			tournament.Gender = tournamentRow[0]
+		}
+	}
+
+	return tournament, i + 3
+}
+
+func createJudoka(curRow []string, lenCurTable int) Judoka {
+	athlete := Judoka{
+		Rank:      curRow[0],
+		Name:      curRow[1],
+		FirstName: curRow[2],
+		JUDOKA:    curRow[3],
+	}
+
+	if lenCurTable > 4 {
+		athlete.Country = curRow[4]
+	}
+
+	return athlete
+}
+
+func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament {
+	var tournament Tournament
+	var curWeightCategoryName string
+	WeightCategories := make(map[string][]Judoka)
+
+	//Проход по турниру
+	for i := 0; i < len(rows); i++ {
+		row := rows[i]
+		if left > len(row) {
+			continue
+		}
+
+		isNewTournament := false
+		curRow := row[left:right]
+
+		//Отсеиваем пустые и другие строки без нужной информации
+		if !isValidDataRow(curRow) {
+			continue
+		}
+
+		if curRow[0] == "_" {
+			isNewTournament = true
+			i++
+		}
+
+		if isNewTournament {
+			// Получаем шапку турнира
+			tournament, i = readTournamentHeader(rows, i, left, right)
+		} else {
+			// fmt.Println(curRow[0])
+			if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
+
+				if len(curRow[0]) > 2 {
+					curWeightCategoryName = curRow[0]
+					WeightCategories[curWeightCategoryName] = make([]Judoka, 0)
+				} else {
+					athlete := createJudoka(curRow, lenCurTable)
+					WeightCategories[curWeightCategoryName] = append(WeightCategories[curWeightCategoryName], athlete)
+				}
+			} else {
+				continue
+			}
+		}
+
+	}
+
+	tournament.WeightCategories = WeightCategories
+
+	return &tournament
+}
+
 func renderExel() (ExelSheet, error) {
-	// cnt := 0
 	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", FILE))
 	sheetList := file.GetSheetList()
 	toJson := make(ExelSheet)
@@ -72,90 +178,14 @@ func renderExel() (ExelSheet, error) {
 
 		//Проход по всей таблице
 		for _, lenCurTable := range lenTables {
-			var tournament Tournament
-			var curWeightCategoryName string
-			curWeightCategory := make(map[string][]Judoka)
 			right := left + lenCurTable
 
-			//Проход по турниру
-			// for i, row := range rows {
-			for i := 0; i < len(rows); i++ {
-				row := rows[i]
-				if left > len(row) {
-					continue
-				}
+			tournament := createTournament(left, right, lenCurTable, rows)
 
-				isNewTournament := false
-				curRow := row[left:right]
-
-				if !re.MatchString(curRow[0]) || ((reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2) && !re.MatchString(curRow[1])) {
-					continue
-				}
-
-				if curRow[0] == "_" {
-					isNewTournament = true
-					i++
-				}
-
-				if isNewTournament {
-					//мнимый цикл для прохода по шапке турнира
-					for j := range 4 {
-						var tournamentRow []string
-						if i+j >= len(rows) || left >= len(rows[i+j]) {
-							continue
-						}
-						if right > len(rows[i+j]) {
-							tournamentRow = rows[i+j][left:]
-						} else {
-							tournamentRow = rows[i+j][left:right]
-						}
-						if len(tournamentRow) == 0 {
-							continue
-						}
-						switch j {
-						case 0:
-							tournament.Name = tournamentRow[0]
-						case 1:
-							tournament.Description = tournamentRow[0]
-						case 2:
-							tournament.Date = tournamentRow[0]
-						case 3:
-							tournament.Gender = tournamentRow[0]
-							isNewTournament = false
-						}
-					}
-					i += 3
-				} else {
-					if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
-
-						if len(curRow[0]) > 2 {
-							curWeightCategoryName = curRow[0]
-							curWeightCategory[curWeightCategoryName] = make([]Judoka, 0)
-						} else {
-							athlete := Judoka{
-								Rank:      curRow[0],
-								Name:      curRow[1],
-								FirstName: curRow[2],
-								JUDOKA:    curRow[3],
-							}
-
-							if lenCurTable > 4 {
-								athlete.Country = curRow[4]
-							}
-
-							curWeightCategory[curWeightCategoryName] = append(curWeightCategory[curWeightCategoryName], athlete)
-						}
-					} else {
-						continue
-					}
-				}
-
-			}
-			tournament.WeightCategories = curWeightCategory
 			if _, exists := toJson[curSheet]; !exists {
 				toJson[curSheet] = make([]Tournament, 0)
 			}
-			toJson[curSheet] = append(toJson[curSheet], tournament)
+			toJson[curSheet] = append(toJson[curSheet], *tournament)
 
 			left = right + 1
 		}
