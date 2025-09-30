@@ -121,7 +121,7 @@ func renderExel() (ExelSheet, error) {
 					}
 					i += 3
 				} else {
-					if reNum.MatchString(curRow[0]) {
+					if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
 
 						if len(curRow[0]) > 2 {
 							curWeightCategoryName = curRow[0]
