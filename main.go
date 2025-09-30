@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
-	"time"
 )
 
 type Judoka struct {
@@ -26,47 +24,22 @@ type ExelSheet map[string][]Tournament
 
 var FILE string
 
-func timer(lastSeconds int, wg *sync.WaitGroup) {
-
-	for i := range lastSeconds {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			time.Sleep(time.Second * time.Duration(i))
-			fmt.Println(lastSeconds-i, " сек")
-		}()
-	}
-
-}
-
 func main() {
 	var choise string
 
 	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours")
 	// fmt.Scanln(&choise)
 	choise = "1"
-	lastSeconds := 2
-	wg := &sync.WaitGroup{}
-	flag := false
 
 	switch choise {
 	case "1":
 		FILE = "USSR_tours"
-		fmt.Println("Программа выполнилась. И автоматически завершится через:")
-		timer(lastSeconds, wg)
+		fmt.Println("Программа выполнилась.")
 	case "2":
 		FILE = "INT_tours"
-		fmt.Println("Программа выполнилась. И автоматически завершится через:")
-		timer(lastSeconds, wg)
+		fmt.Println("Программа выполнилась.")
 	default:
-		lastSeconds = 3
-		fmt.Println("Ошибка ввода, попробуйте еще раз. Программа завершится сама через:")
-		timer(lastSeconds, wg)
-		flag = true
-	}
-	wg.Wait()
-	if flag {
-		return
+		fmt.Println("Ошибка ввода, попробуйте еще раз.")
 	}
 	ExelToJson()
 	JsonToExel()
