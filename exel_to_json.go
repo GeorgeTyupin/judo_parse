@@ -61,9 +61,7 @@ func renderExel() (ExelSheet, error) {
 		rows, err := file.GetRows(curSheet)
 		rows = rows[4:]
 		lenTables := findLenTables(rows[1])
-		if curSheet == "URS_FEM_IT" {
-			fmt.Println(lenTables)
-		}
+
 		fmt.Println(curSheet)
 
 		if err != nil {
@@ -103,10 +101,17 @@ func renderExel() (ExelSheet, error) {
 					//мнимый цикл для прохода по шапке турнира
 					for j := range 4 {
 						var tournamentRow []string
-						if right > len(rows[i+j]) {
+						if i+j >= len(rows) || left >= len(rows[i+j]) {
 							continue
 						}
-						tournamentRow = rows[i+j][left:right]
+						if right > len(rows[i+j]) {
+							tournamentRow = rows[i+j][left:]
+						} else {
+							tournamentRow = rows[i+j][left:right]
+						}
+						if len(tournamentRow) == 0 {
+							continue
+						}
 						switch j {
 						case 0:
 							tournament.Name = tournamentRow[0]
