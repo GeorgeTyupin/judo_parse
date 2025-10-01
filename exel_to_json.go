@@ -116,7 +116,16 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 		}
 
 		isNewTournament := false
-		curRow := row[left:right]
+
+		var curRow []string
+
+		if right < cap(row) {
+			curRow = row[left:right]
+		} else {
+			curRow = make([]string, 0, cap(row)+10)
+			copy(curRow, row)
+			curRow = curRow[left:right]
+		}
 
 		//Отсеиваем пустые и другие строки без нужной информации
 		if !isValidDataRow(curRow) {
