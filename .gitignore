@@ -6,3 +6,4 @@
 *.json
 !*_tours.xlsx
 ~*
+/bin
