@@ -122,7 +122,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 		if right < cap(row) {
 			curRow = row[left:right]
 		} else {
-			curRow = make([]string, 0, cap(row)+5)
+			curRow = make([]string, 0, cap(row)+(right-cap(row)))
 			copy(curRow, row)
 			curRow = curRow[left:right]
 		}
