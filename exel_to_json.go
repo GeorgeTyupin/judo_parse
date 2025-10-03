@@ -62,11 +62,15 @@ func readTournamentHeader(rows [][]string, i, left, right int) (Tournament, int)
 			continue
 		}
 
+		row := rows[i+j]
 		var tournamentRow []string
-		if right > len(rows[i+j]) {
-			tournamentRow = rows[i+j][left:]
+
+		if right < cap(row) {
+			tournamentRow = row[left:right]
 		} else {
-			tournamentRow = rows[i+j][left:right]
+			tournamentRow = make([]string, 0, cap(row)+(right-cap(row)))
+			copy(tournamentRow, row)
+			tournamentRow = tournamentRow[left:right]
 		}
 
 		if len(tournamentRow) == 0 {
@@ -111,6 +115,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 	//Проход по турниру
 	for i := 0; i < len(rows); i++ {
 		row := rows[i]
+
 		if left > len(row) {
 			continue
 		}
