@@ -17,3 +17,23 @@ type Tournament struct {
 }
 
 type ExelSheet map[string][]Tournament
+
+type Note struct {
+	TOURNAMENT     string
+	TOUR_TYPE      string
+	TOUR_PLACE     string
+	TOUR_CITY      string
+	TOUR_COUNTRY   string
+	DATE           string
+	YEAR           string
+	GENDER         string
+	WeightCategory string
+	WC             string
+	RANK           string
+	NAME           string
+	FIRSTNAME      string
+	JUDOKA         string
+	// NAME_RUS       string
+	// JUDOKA_RUS     string
+	COUNTRY string
+}
