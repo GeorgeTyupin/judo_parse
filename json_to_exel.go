@@ -21,6 +21,13 @@ func decode(file *os.File) (ExelSheet, error) {
 	return list, nil
 }
 
+func safeGet(parts []string, index int) string {
+	if index < len(parts) {
+		return parts[index]
+	}
+	return ""
+}
+
 func saveNote(note Note, f *excelize.File, i int) {
 	rowNum := i + 2
 	f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
@@ -71,12 +78,15 @@ func JsonToExel() {
 		for _, tournament := range sheet {
 			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
-					tourType := strings.TrimSpace(strings.Split(tournament.Description, "-")[0])
-					tourPlace := strings.TrimSpace(strings.Split(tournament.Description, "-")[1])
-					tourCity := strings.TrimSpace(strings.SplitN(tourPlace, ",", 2)[0])
-					tourCountry := strings.Trim(strings.SplitN(tourPlace, " ", 4)[3], "() ")
-					year := strings.TrimSpace(strings.Fields(tournament.Date)[2])
-					wc := strings.TrimSpace(strings.Fields(categoryName)[1])
+					descParts := strings.Split(tournament.Description, "-")
+					tourType := strings.TrimSpace(safeGet(descParts, 0))
+					tourPlace := strings.TrimSpace(safeGet(descParts, 1))
+
+					tourCity := strings.TrimSpace(safeGet(strings.SplitN(tourPlace, ",", 2), 0))
+					tourCountry := strings.Trim(safeGet(strings.SplitN(tourPlace, " ", 4), 3), "() ")
+
+					year := strings.TrimSpace(safeGet(strings.Fields(tournament.Date), 2))
+					wc := strings.TrimSpace(safeGet(strings.Fields(categoryName), 1))
 					// nameRus, _ := gtranslate.Translate(man.Name, language.English, language.Russian)
 					note := Note{
 						TOURNAMENT:     tournament.Name,
