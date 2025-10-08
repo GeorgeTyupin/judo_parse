@@ -107,10 +107,12 @@ func createJudoka(curRow []string, lenCurTable int) Judoka {
 	return athlete
 }
 
-func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament {
+func createTournament(left, right, lenCurTable int, rows [][]string) []Tournament {
+	var tournaments []Tournament
 	var tournament Tournament
 	var curWeightCategoryName string
 	WeightCategories := make(map[string][]Judoka)
+	isNewTournament := false
 
 	//Проход по турниру
 	for i := 0; i < len(rows); i++ {
@@ -119,8 +121,6 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 		if left > len(row) {
 			continue
 		}
-
-		isNewTournament := false
 
 		var curRow []string
 
@@ -138,13 +138,17 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 		}
 
 		if curRow[0] == "_" {
-			isNewTournament = true
-			i++
-		}
+			// Сохраняем предыдущий турнир, если он был инициализирован
+			if isNewTournament {
+				tournament.WeightCategories = WeightCategories
+				tournaments = append(tournaments, tournament)
+			}
 
-		if isNewTournament {
-			// Получаем шапку турнира
+			// Получаем шапку нового турнира
+			i++
 			tournament, i = readTournamentHeader(rows, i, left, right)
+			WeightCategories = make(map[string][]Judoka)
+			isNewTournament = true
 		} else {
 			// fmt.Println(curRow[0])
 			if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
@@ -163,9 +167,13 @@ func createTournament(left, right, lenCurTable int, rows [][]string) *Tournament
 
 	}
 
-	tournament.WeightCategories = WeightCategories
+	// Сохраняем последний турнир
+	if isNewTournament {
+		tournament.WeightCategories = WeightCategories
+		tournaments = append(tournaments, tournament)
+	}
 
-	return &tournament
+	return tournaments
 }
 
 func renderExel() (ExelSheet, error) {
@@ -194,12 +202,12 @@ func renderExel() (ExelSheet, error) {
 		for _, lenCurTable := range lenTables {
 			right := left + lenCurTable
 
-			tournament := createTournament(left, right, lenCurTable, rows)
+			tournaments := createTournament(left, right, lenCurTable, rows)
 
 			if _, exists := toJson[curSheet]; !exists {
 				toJson[curSheet] = make([]Tournament, 0)
 			}
-			toJson[curSheet] = append(toJson[curSheet], *tournament)
+			toJson[curSheet] = append(toJson[curSheet], tournaments...)
 
 			left = right + 1
 		}
