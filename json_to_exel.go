@@ -82,12 +82,30 @@ func JsonToExel() {
 					tourType := strings.TrimSpace(safeGet(descParts, 0))
 					tourPlace := strings.TrimSpace(safeGet(descParts, 1))
 
-					tourCity := strings.TrimSpace(safeGet(strings.SplitN(tourPlace, ",", 2), 0))
-					tourCountry := strings.Trim(safeGet(strings.SplitN(tourPlace, " ", 4), 3), "() ")
+					tourCity := ""
+					if placeParts := strings.SplitN(tourPlace, ",", 2); len(placeParts) > 0 {
+						tourCity = strings.TrimSpace(placeParts[0])
+					}
 
-					year := strings.TrimSpace(safeGet(strings.Fields(tournament.Date), 2))
-					wc := strings.TrimSpace(safeGet(strings.Fields(categoryName), 1))
-					// nameRus, _ := gtranslate.Translate(man.Name, language.English, language.Russian)
+					tourCountry := ""
+					if startIdx := strings.Index(tourPlace, "("); startIdx != -1 {
+						if endIdx := strings.Index(tourPlace[startIdx:], ")"); endIdx != -1 {
+							countryPart := tourPlace[startIdx+1 : startIdx+endIdx]
+							if commaParts := strings.Split(countryPart, ","); len(commaParts) > 0 {
+								tourCountry = strings.TrimSpace(commaParts[0])
+							}
+						}
+					}
+
+					year := ""
+					if len(tournament.Date) >= 4 {
+						year = tournament.Date[len(tournament.Date)-4:]
+					}
+
+					wc := ""
+					if catParts := strings.Fields(categoryName); len(catParts) > 1 {
+						wc = strings.Join(catParts[1:], " ")
+					}
 					note := Note{
 						TOURNAMENT:     tournament.Name,
 						TOUR_TYPE:      tourType,
