@@ -149,6 +149,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []Tournamen
 			tournament, i = readTournamentHeader(rows, i, left, right)
 			WeightCategories = make(map[string][]Judoka)
 			isNewTournament = true
+			curWeightCategoryName = ""
 		} else {
 			// fmt.Println(curRow[0])
 			if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
