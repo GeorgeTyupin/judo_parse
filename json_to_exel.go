@@ -54,7 +54,7 @@ func JsonToExel() {
 		file = excelize.NewFile()
 	}
 
-	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "COUNTRY"}
+	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "COUNTRY", "SO"}
 
 	// Записываем заголовки в первую строку
 	for i, header := range headers {
