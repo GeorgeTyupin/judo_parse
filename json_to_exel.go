@@ -78,7 +78,7 @@ func JsonToExel() {
 		for _, tournament := range sheet {
 			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
-					descParts := strings.Split(tournament.Description, "-")
+					descParts := strings.Split(tournament.Description, "—")
 					tourType := strings.TrimSpace(safeGet(descParts, 0))
 					tourPlace := strings.TrimSpace(safeGet(descParts, 1))
 
@@ -121,8 +121,9 @@ func JsonToExel() {
 						NAME:           man.Name,
 						FIRSTNAME:      man.FirstName,
 						JUDOKA:         man.JUDOKA,
+						COUNTRY:        man.Country,
+						SO:             man.SO,
 						// NAME_RUS:       nameRus,
-						COUNTRY: man.Country,
 					}
 					saveNote(note, file, cnt)
 					cnt++
