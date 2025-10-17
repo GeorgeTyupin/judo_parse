@@ -45,6 +45,7 @@ func saveNote(note Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.FIRSTNAME)
 	f.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.JUDOKA)
 	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.COUNTRY)
+	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.SO)
 }
 
 func JsonToExel() {
