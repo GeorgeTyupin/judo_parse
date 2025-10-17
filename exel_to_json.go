@@ -102,6 +102,8 @@ func createJudoka(curRow []string, lenCurTable int) Judoka {
 
 	if lenCurTable > 4 {
 		athlete.Country = curRow[4]
+	} else if lenCurTable > 5 {
+		athlete.SO = curRow[5]
 	}
 
 	return athlete

@@ -6,6 +6,7 @@ type Judoka struct {
 	FirstName string `json:"FIRSTNAME"`
 	JUDOKA    string `json:"JUDOKA"`
 	Country   string `json:"COUNTRY"`
+	SO        string `json:"SO"`
 }
 
 type Tournament struct {
@@ -33,7 +34,8 @@ type Note struct {
 	NAME           string
 	FIRSTNAME      string
 	JUDOKA         string
+	COUNTRY        string
+	SO             string
 	// NAME_RUS       string
 	// JUDOKA_RUS     string
-	COUNTRY string
 }
