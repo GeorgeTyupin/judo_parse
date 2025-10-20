@@ -44,8 +44,11 @@ func saveNote(note Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.NAME)
 	f.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.FIRSTNAME)
 	f.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.JUDOKA)
-	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.SO)
+	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.NAME_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.FIRSTNAME_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.JUDOKA_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.COUNTRY)
+	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.SO)
 }
 
 func JsonToExel() {
@@ -54,7 +57,7 @@ func JsonToExel() {
 		file = excelize.NewFile()
 	}
 
-	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "COUNTRY", "SO"}
+	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
 
 	// Записываем заголовки в первую строку
 	for i, header := range headers {
@@ -107,6 +110,11 @@ func JsonToExel() {
 					if catParts := strings.Fields(categoryName); len(catParts) > 1 {
 						wc = strings.Join(catParts[1:], " ")
 					}
+
+					nameRus := transliterate(man.Name)
+					firstName := transliterate(man.FirstName)
+					judokaRus := transliterate(man.JUDOKA)
+
 					note := Note{
 						TOURNAMENT:     tournament.Name,
 						TOUR_TYPE:      tourType,
@@ -122,9 +130,11 @@ func JsonToExel() {
 						NAME:           man.Name,
 						FIRSTNAME:      man.FirstName,
 						JUDOKA:         man.JUDOKA,
+						NAME_RUS:       nameRus,
+						FIRSTNAME_RUS:  firstName,
+						JUDOKA_RUS:     judokaRus,
 						COUNTRY:        man.Country,
 						SO:             man.SO,
-						// NAME_RUS:       nameRus,
 					}
 					saveNote(note, file, cnt)
 					cnt++

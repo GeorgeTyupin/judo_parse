@@ -34,8 +34,9 @@ type Note struct {
 	NAME           string
 	FIRSTNAME      string
 	JUDOKA         string
+	NAME_RUS       string
+	FIRSTNAME_RUS  string
+	JUDOKA_RUS     string
 	COUNTRY        string
 	SO             string
-	// NAME_RUS       string
-	// JUDOKA_RUS     string
 }
