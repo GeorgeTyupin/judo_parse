@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
 var FILE string
 
 func main() {
+	os.Remove("Сводная таблица.xlsx")
+	os.Remove("USSR_tours.json")
+
 	var choise string
 
 	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours")

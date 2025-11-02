@@ -10,6 +10,21 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+var monthMap = map[string]string{
+	"January":   "01",
+	"February":  "02",
+	"March":     "03",
+	"April":     "04",
+	"May":       "05",
+	"June":      "06",
+	"July":      "07",
+	"August":    "08",
+	"September": "09",
+	"October":   "10",
+	"November":  "11",
+	"December":  "12",
+}
+
 func decode(file *os.File) (ExelSheet, error) {
 	decode := json.NewDecoder(file)
 	var list ExelSheet
@@ -49,6 +64,33 @@ func saveNote(note Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.JUDOKA_RUS)
 	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.COUNTRY)
 	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.SO)
+}
+
+func formatDate(date string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Поймана паника, ошибка с датой ", date, strings.Contains(date, "-"), r)
+		}
+	}()
+	var result string
+
+	if len(date) < 6 {
+		fmt.Println(date)
+		return date
+	}
+
+	if strings.Contains(date, "-") {
+		result = strings.TrimSpace(strings.Split(date, "-")[1])
+	} else {
+		result = date
+	}
+
+	// fmt.Println(result)
+
+	for month, num := range monthMap {
+		result = strings.Replace(result, month, num, -1)
+	}
+	return result
 }
 
 func JsonToExel() {
@@ -114,6 +156,9 @@ func JsonToExel() {
 					nameRus := transliterate(man.Name)
 					firstName := transliterate(man.FirstName)
 					judokaRus := transliterate(man.JUDOKA)
+
+					// fmt.Println(formatDate(tournament.Date))
+					formatDate(tournament.Date)
 
 					note := Note{
 						TOURNAMENT:     tournament.Name,
