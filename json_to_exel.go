@@ -67,15 +67,9 @@ func saveNote(note Note, f *excelize.File, i int) {
 }
 
 func formatDate(date string) string {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Поймана паника, ошибка с датой ", date, strings.Contains(date, "-"), r)
-		}
-	}()
 	var result string
 
-	if len(date) < 6 {
-		fmt.Println(date)
+	if len(date) < 5 {
 		return date
 	}
 
@@ -85,7 +79,7 @@ func formatDate(date string) string {
 		result = date
 	}
 
-	// fmt.Println(result)
+	result = strings.Join(strings.Fields(result), ".")
 
 	for month, num := range monthMap {
 		result = strings.Replace(result, month, num, -1)
@@ -118,7 +112,6 @@ func JsonToExel() {
 		panic(err)
 	}
 
-	// fmt.Println(data["URS_NC"])
 	var cnt = 0
 	for _, sheet := range data {
 		for _, tournament := range sheet {
@@ -157,16 +150,13 @@ func JsonToExel() {
 					firstName := transliterate(man.FirstName)
 					judokaRus := transliterate(man.JUDOKA)
 
-					// fmt.Println(formatDate(tournament.Date))
-					formatDate(tournament.Date)
-
 					note := Note{
 						TOURNAMENT:     tournament.Name,
 						TOUR_TYPE:      tourType,
 						TOUR_PLACE:     tourPlace,
 						TOUR_CITY:      tourCity,
 						TOUR_COUNTRY:   tourCountry,
-						DATE:           tournament.Date,
+						DATE:           formatDate(tournament.Date),
 						YEAR:           year,
 						GENDER:         tournament.Gender,
 						WeightCategory: categoryName,
