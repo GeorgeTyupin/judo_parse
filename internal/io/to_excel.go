@@ -115,7 +115,7 @@ func formatDate(date string) string {
 	return result
 }
 
-func ToExcel(wg *sync.WaitGroup, data models.ExelSheet, table *excelize.File) {
+func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 	defer wg.Done()
 
 	var cnt = 0
@@ -178,7 +178,7 @@ func ToExcel(wg *sync.WaitGroup, data models.ExelSheet, table *excelize.File) {
 						COUNTRY:        man.Country,
 						SO:             man.SO,
 					}
-					saveNote(note, table, cnt)
+					saveNote(note, t.Table, cnt)
 					cnt++
 				}
 			}
