@@ -12,11 +12,6 @@ import (
 
 var files = make([]string, 0, 2)
 
-type PTable interface {
-	SetHeader()
-	SaveTable()
-}
-
 func main() {
 	os.Remove("Сводная таблица.xlsx")
 	os.Remove("USSR_tours.json")
