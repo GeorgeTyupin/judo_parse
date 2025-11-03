@@ -47,7 +47,7 @@ func main() {
 		}
 
 		wg.Add(2)
-		go judioio.ToExcel(wg, data, table.Table)
+		go table.ToExcel(wg, data)
 		go judioio.ToJson(wg, data, file)
 		wg.Wait()
 	}
