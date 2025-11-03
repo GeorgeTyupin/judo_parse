@@ -97,13 +97,17 @@ func formatDate(date string) string {
 		return date
 	}
 
-	if strings.Contains(date, "-") {
-		result = strings.TrimSpace(strings.Split(date, "-")[1])
-	} else {
-		result = date
-	}
+	// if strings.Contains(date, "-") {
+	// 	result = strings.TrimSpace(strings.Split(date, "-")[1])
+	// } else {
+	// 	result = date
+	// }
 
-	result = strings.Join(strings.Fields(result), ".")
+	// result = strings.Join(strings.Fields(result), ".")
+
+	result = strings.TrimFunc(date, func(r rune) bool {
+		return r >= '0' && r <= '9' || r == ' '
+	})
 
 	for month, num := range monthMap {
 		result = strings.Replace(result, month, num, -1)
@@ -158,8 +162,9 @@ func ToExcel(wg *sync.WaitGroup, data models.ExelSheet, table *excelize.File) {
 						TOUR_PLACE:     tourPlace,
 						TOUR_CITY:      tourCity,
 						TOUR_COUNTRY:   tourCountry,
-						DATE:           formatDate(tournament.Date),
+						DATE:           tournament.Date,
 						YEAR:           year,
+						MONTH:          formatDate(tournament.Date),
 						GENDER:         tournament.Gender,
 						WeightCategory: categoryName,
 						WC:             wc,

@@ -27,6 +27,7 @@ type Note struct {
 	TOUR_COUNTRY   string
 	DATE           string
 	YEAR           string
+	MONTH          string
 	GENDER         string
 	WeightCategory string
 	WC             string
