@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"judo/internal/models"
-	"judo/pkg/transliterate"
+	"judo/pkg/replacers"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -17,10 +17,7 @@ type PivotTable struct {
 }
 
 func InitTable(name string) *PivotTable {
-	table, err := excelize.OpenFile(fmt.Sprintf("%s.xlsx", name))
-	if err != nil {
-		table = excelize.NewFile()
-	}
+	table := excelize.NewFile()
 
 	pTable := PivotTable{
 		Name:  name,
@@ -33,7 +30,7 @@ func InitTable(name string) *PivotTable {
 }
 
 func (t *PivotTable) setHeader() {
-	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
+	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "COUNTRY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
 
 	for i, header := range headers {
 		cell := fmt.Sprintf("%c1", 'A'+i)
@@ -42,6 +39,9 @@ func (t *PivotTable) setHeader() {
 }
 
 func (t *PivotTable) SaveTable() {
+	if err := t.Table.SaveAs(fmt.Sprintf("%s.xlsx", t.Name)); err != nil {
+		fmt.Printf("Ошибка сохранения файла %s: %v\n", t.Name, err)
+	}
 	t.Table.Close()
 }
 
@@ -74,20 +74,22 @@ func saveNote(note models.Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.TOUR_PLACE)
 	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.TOUR_CITY)
 	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.TOUR_COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.DATE)
-	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.YEAR)
-	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.GENDER)
-	f.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.WeightCategory)
-	f.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.WC)
-	f.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.RANK)
-	f.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.NAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.FIRSTNAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.JUDOKA)
-	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.NAME_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.FIRSTNAME_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.JUDOKA_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.SO)
+	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.COUNTRY_LAST)
+	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.DATE)
+	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
+	f.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
+	f.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.GENDER)
+	f.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.WeightCategory)
+	f.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.WC)
+	f.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.RANK)
+	f.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.NAME)
+	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.FIRSTNAME)
+	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.JUDOKA)
+	f.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
+	f.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
+	f.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.SO)
 }
 
 func formatDate(date string) string {
@@ -97,16 +99,16 @@ func formatDate(date string) string {
 		return date
 	}
 
-	// if strings.Contains(date, "-") {
-	// 	result = strings.TrimSpace(strings.Split(date, "-")[1])
-	// } else {
-	// 	result = date
-	// }
+	if strings.Contains(date, "-") {
+		result = strings.TrimSpace(strings.Split(date, "-")[1])
+	} else {
+		result = date
+	}
 
 	// result = strings.Join(strings.Fields(result), ".")
 
-	result = strings.TrimFunc(date, func(r rune) bool {
-		return r >= '0' && r <= '9' || r == ' '
+	result = strings.TrimFunc(result, func(r rune) bool {
+		return !((r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z'))
 	})
 
 	for month, num := range monthMap {
@@ -152,9 +154,9 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						wc = strings.Join(catParts[1:], " ")
 					}
 
-					nameRus := transliterate.Transliterate(man.Name)
-					firstName := transliterate.Transliterate(man.FirstName)
-					judokaRus := transliterate.Transliterate(man.JUDOKA)
+					nameRus := replacers.Transliterate(man.Name)
+					firstName := replacers.Transliterate(man.FirstName)
+					judokaRus := replacers.Transliterate(man.JUDOKA)
 
 					note := models.Note{
 						TOURNAMENT:     tournament.Name,
@@ -162,6 +164,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						TOUR_PLACE:     tourPlace,
 						TOUR_CITY:      tourCity,
 						TOUR_COUNTRY:   tourCountry,
+						COUNTRY_LAST:   replacers.NormalizeCityName(tourCity),
 						DATE:           tournament.Date,
 						YEAR:           year,
 						MONTH:          formatDate(tournament.Date),

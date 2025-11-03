@@ -1,4 +1,4 @@
-package transliterate
+package replacers
 
 import "strings"
 

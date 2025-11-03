@@ -24,6 +24,7 @@ type Note struct {
 	TOUR_TYPE      string
 	TOUR_PLACE     string
 	TOUR_CITY      string
+	COUNTRY_LAST   string
 	TOUR_COUNTRY   string
 	DATE           string
 	YEAR           string
