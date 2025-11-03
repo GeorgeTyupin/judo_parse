@@ -3,12 +3,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
+	judioio "judo/internal/io"
 	"judo/internal/parse"
 )
 
-var FILES = make([]string, 0, 2)
+var files = make([]string, 0, 2)
+
+type PTable interface {
+	SetHeader()
+	SaveTable()
+}
 
 func main() {
 	os.Remove("Сводная таблица.xlsx")
@@ -22,20 +29,33 @@ func main() {
 
 	switch choise {
 	case "1":
-		FILES = append(FILES, "USSR_tours")
+		files = append(files, "USSR_tours")
 	case "2":
-		FILES = append(FILES, "INT_tours")
+		files = append(files, "INT_tours")
 	case "3":
-		FILES = append(FILES, "USSR_tours")
-		FILES = append(FILES, "INT_tours")
+		files = append(files, "USSR_tours")
+		files = append(files, "INT_tours")
 	default:
 		fmt.Println("Ошибка ввода, попробуйте еще раз.")
 	}
 
+	wg := &sync.WaitGroup{}
 	start := time.Now()
 
-	parse.ExelToJson(FILES)
-	parse.JsonToExel(FILES)
+	table := judioio.InitTable("Сводная таблица")
+	defer table.SaveTable()
+
+	for _, file := range files {
+		data, err := parse.RenderExel(file)
+		if err != nil {
+			panic(fmt.Sprintf("Ошибка чтения исходного файла %s - %v", file, err))
+		}
+
+		wg.Add(2)
+		go judioio.ToExcel(wg, data, table.Table)
+		go judioio.ToJson(wg, data, file)
+		wg.Wait()
+	}
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
 }
