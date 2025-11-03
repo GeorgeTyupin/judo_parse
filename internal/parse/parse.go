@@ -1,10 +1,7 @@
 package parse
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"regexp"
 	"strings"
 
@@ -182,10 +179,10 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 	return tournaments
 }
 
-func renderExel(excelName string) (models.ExelSheet, error) {
+func RenderExel(excelName string) (models.ExelSheet, error) {
 	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", excelName))
 	sheetList := file.GetSheetList()
-	toJson := make(models.ExelSheet)
+	result := make(models.ExelSheet)
 
 	//Проход по всем листам
 	for _, curSheet := range sheetList {
@@ -193,14 +190,14 @@ func renderExel(excelName string) (models.ExelSheet, error) {
 			continue
 		}
 		rows, err := file.GetRows(curSheet)
+		if err != nil {
+			return nil, err
+		}
+
 		rows = rows[4:]
 		lenTables := findLenTables(rows[1])
 
 		fmt.Println(curSheet)
-
-		if err != nil {
-			return make(models.ExelSheet), err
-		}
 
 		left := 1
 
@@ -210,42 +207,14 @@ func renderExel(excelName string) (models.ExelSheet, error) {
 
 			tournaments := createTournament(left, right, lenCurTable, rows)
 
-			if _, exists := toJson[curSheet]; !exists {
-				toJson[curSheet] = make([]*models.Tournament, 0)
+			if _, exists := result[curSheet]; !exists {
+				result[curSheet] = make([]*models.Tournament, 0)
 			}
-			toJson[curSheet] = append(toJson[curSheet], tournaments...)
+			result[curSheet] = append(result[curSheet], tournaments...)
 
 			left = right + 1
 		}
 	}
 
-	return toJson, nil
-}
-
-func ExelToJson(files []string) {
-	for _, file := range files {
-		data, err := renderExel(file)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		if err != nil {
-			log.Fatalf("Ошибка маршалинга: %v", err)
-		}
-
-		newJson, err := os.Create(fmt.Sprintf("%s.json", file))
-		if err != nil {
-			log.Fatalf("Ошибка создания файла: %v", err)
-		}
-		defer newJson.Close()
-
-		encoder := json.NewEncoder(newJson)
-		encoder.SetIndent("", "    ")
-
-		err = encoder.Encode(&data)
-
-		if err != nil {
-			log.Fatalf("Ошибка записи в файл: %v", err)
-		}
-	}
+	return result, nil
 }

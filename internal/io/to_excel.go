@@ -1,16 +1,49 @@
-package parse
+package judioio
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
+	"sync"
 
 	"judo/internal/models"
 	"judo/pkg/transliterate"
 
 	"github.com/xuri/excelize/v2"
 )
+
+type PivotTable struct {
+	Name  string
+	Table *excelize.File
+}
+
+func InitTable(name string) *PivotTable {
+	table, err := excelize.OpenFile(fmt.Sprintf("%s.xlsx", name))
+	if err != nil {
+		table = excelize.NewFile()
+	}
+
+	pTable := PivotTable{
+		Name:  name,
+		Table: table,
+	}
+
+	pTable.setHeader()
+
+	return &pTable
+}
+
+func (t *PivotTable) setHeader() {
+	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
+
+	for i, header := range headers {
+		cell := fmt.Sprintf("%c1", 'A'+i)
+		t.Table.SetCellValue("Sheet1", cell, header)
+	}
+}
+
+func (t *PivotTable) SaveTable() {
+	t.Table.Close()
+}
 
 var monthMap = map[string]string{
 	"January":   "01",
@@ -78,7 +111,9 @@ func formatDate(date string) string {
 	return result
 }
 
-func process(data models.ExelSheet, file *excelize.File) {
+func ToExcel(wg *sync.WaitGroup, data models.ExelSheet, table *excelize.File) {
+	defer wg.Done()
+
 	var cnt = 0
 	for _, sheet := range data {
 		for _, tournament := range sheet {
@@ -138,49 +173,10 @@ func process(data models.ExelSheet, file *excelize.File) {
 						COUNTRY:        man.Country,
 						SO:             man.SO,
 					}
-					saveNote(note, file, cnt)
+					saveNote(note, table, cnt)
 					cnt++
 				}
 			}
 		}
-	}
-}
-
-func JsonToExel(files []string) {
-	result, err := excelize.OpenFile("Сводная таблица.xlsx")
-	if err != nil {
-		result = excelize.NewFile()
-	}
-
-	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "DATE", "YEAR", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
-
-	// Записываем заголовки в первую строку
-	for i, header := range headers {
-		cell := fmt.Sprintf("%c1", 'A'+i)
-		result.SetCellValue("Sheet1", cell, header)
-	}
-
-	for _, file := range files {
-		jsonFile, err := os.Open(fmt.Sprintf("%s.json", file))
-		if err != nil {
-			panic("Файл json не удалось прочесть")
-		}
-		defer jsonFile.Close()
-
-		var data models.ExelSheet
-		decoder := json.NewDecoder(jsonFile)
-		err = decoder.Decode(&data)
-
-		if err != nil {
-			panic(err)
-		}
-
-		process(data, result)
-	}
-
-	if err = result.SaveAs("Сводная таблица.xlsx"); err != nil {
-		panic("Изменения не записаны")
-	} else {
-		fmt.Println("Изменения записаны")
 	}
 }
