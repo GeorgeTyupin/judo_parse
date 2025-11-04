@@ -12,6 +12,7 @@ import (
 
 func ToJson(wg *sync.WaitGroup, data models.ExelSheet, file string) {
 	defer wg.Done()
+	fmt.Println(1)
 
 	newJson, err := os.Create(fmt.Sprintf("%s.json", file))
 	if err != nil {

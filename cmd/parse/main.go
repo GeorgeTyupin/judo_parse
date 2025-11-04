@@ -11,6 +11,7 @@ import (
 )
 
 var files = make([]string, 0, 2)
+var createJSON = true
 
 func main() {
 	os.Remove("Сводная таблица.xlsx")
@@ -46,9 +47,12 @@ func main() {
 			panic(fmt.Sprintf("Ошибка чтения исходного файла %s - %v", file, err))
 		}
 
-		wg.Add(2)
+		wg.Add(1)
 		go table.ToExcel(wg, data)
-		go judioio.ToJson(wg, data, file)
+		if createJSON {
+			wg.Add(1)
+			go judioio.ToJson(wg, data, file)
+		}
 		wg.Wait()
 	}
 
