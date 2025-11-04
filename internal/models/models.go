@@ -24,7 +24,7 @@ type Note struct {
 	TOUR_TYPE      string
 	TOUR_PLACE     string
 	TOUR_CITY      string
-	COUNTRY_LAST   string
+	TOUR_CITY_LAST string
 	TOUR_COUNTRY   string
 	DATE           string
 	YEAR           string
@@ -40,5 +40,6 @@ type Note struct {
 	FIRSTNAME_RUS  string
 	JUDOKA_RUS     string
 	COUNTRY        string
+	COUNTRY_LAST   string
 	SO             string
 }

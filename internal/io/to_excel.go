@@ -30,7 +30,7 @@ func InitTable(name string) *PivotTable {
 }
 
 func (t *PivotTable) setHeader() {
-	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "COUNTRY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "SO"}
+	headers := []string{"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY", "TOUR_CITY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY", "WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS", "JUDOKA_RUS", "COUNTRY", "COUNTRY_LAST", "SO"}
 
 	for i, header := range headers {
 		cell := fmt.Sprintf("%c1", 'A'+i)
@@ -74,7 +74,7 @@ func saveNote(note models.Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.TOUR_PLACE)
 	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.TOUR_CITY)
 	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.TOUR_COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.COUNTRY_LAST)
+	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.TOUR_CITY_LAST)
 	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.DATE)
 	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
 	f.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
@@ -89,14 +89,15 @@ func saveNote(note models.Note, f *excelize.File, i int) {
 	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
 	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
 	f.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.SO)
+	f.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
+	f.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
 }
 
 func formatDate(date string) string {
 	var result string
 
 	if len(date) < 5 {
-		return date
+		return ""
 	}
 
 	if strings.Contains(date, "-") {
@@ -104,8 +105,6 @@ func formatDate(date string) string {
 	} else {
 		result = date
 	}
-
-	// result = strings.Join(strings.Fields(result), ".")
 
 	result = strings.TrimFunc(result, func(r rune) bool {
 		return !((r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z'))
@@ -164,7 +163,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						TOUR_PLACE:     tourPlace,
 						TOUR_CITY:      tourCity,
 						TOUR_COUNTRY:   tourCountry,
-						COUNTRY_LAST:   replacers.NormalizeCityName(tourCity),
+						TOUR_CITY_LAST: replacers.NormalizeCityName(man.Country),
 						DATE:           tournament.Date,
 						YEAR:           year,
 						MONTH:          formatDate(tournament.Date),
@@ -179,6 +178,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						FIRSTNAME_RUS:  firstName,
 						JUDOKA_RUS:     judokaRus,
 						COUNTRY:        man.Country,
+						COUNTRY_LAST:   replacers.NormalizeCityName(man.Country),
 						SO:             man.SO,
 					}
 					saveNote(note, t.Table, cnt)
