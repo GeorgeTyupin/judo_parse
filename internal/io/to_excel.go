@@ -164,7 +164,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						TOUR_PLACE:     tourPlace,
 						TOUR_CITY:      tourCity,
 						TOUR_COUNTRY:   tourCountry,
-						TOUR_CITY_LAST: replacers.NormalizeCityName(man.Country),
+						TOUR_CITY_LAST: replacers.NormalizeCityName(tourCity),
 						DATE:           tournament.Date,
 						YEAR:           year,
 						MONTH:          formatDate(tournament.Date),
