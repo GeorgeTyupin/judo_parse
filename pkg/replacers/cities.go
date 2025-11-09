@@ -10,8 +10,10 @@ var cityReplacer = strings.NewReplacer(
 	"Sverdlovsk", "Ekaterinburg",
 	"Gorky", "Nizhniy Novgorod",
 	"Andropov", "Rybinsk",
+	"Ordzhonikidzeabad", "Vahdat",
 	"Ordzhonikidze", "Vladikavkaz",
 	"Ustinov", "Izhevsk",
+	"Kuibyshev", "Samara",
 )
 
 func NormalizeCityName(s string) string {
