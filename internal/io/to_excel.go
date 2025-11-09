@@ -67,30 +67,31 @@ func safeGet(parts []string, index int) string {
 	return ""
 }
 
-func saveNote(note models.Note, f *excelize.File, i int) {
+func (t *PivotTable) saveNote(note models.Note, i int) {
 	rowNum := i + 2
-	f.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
-	f.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.TOUR_TYPE)
-	f.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.TOUR_PLACE)
-	f.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.TOUR_CITY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.TOUR_COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.TOUR_CITY_LAST)
-	f.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.DATE)
-	f.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
-	f.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
-	f.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.GENDER)
-	f.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.WeightCategory)
-	f.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.WC)
-	f.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.RANK)
-	f.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.NAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.FIRSTNAME)
-	f.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.JUDOKA)
-	f.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
-	f.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
-	f.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
-	f.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
+
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.TOUR_TYPE)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.TOUR_PLACE)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.TOUR_CITY)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.TOUR_COUNTRY)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.TOUR_CITY_LAST)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.DATE)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.GENDER)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.WeightCategory)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.WC)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.RANK)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.NAME)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.FIRSTNAME)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.JUDOKA)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME_RUS)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
+	t.Table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
 }
 
 func formatDate(date string) string {
@@ -181,7 +182,8 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						COUNTRY_LAST:   replacers.NormalizeCityName(man.Country),
 						SO:             man.SO,
 					}
-					saveNote(note, t.Table, cnt)
+
+					t.saveNote(note, cnt)
 					cnt++
 				}
 			}
