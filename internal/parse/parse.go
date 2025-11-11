@@ -53,7 +53,7 @@ func isValidDataRow(curRow []string) bool {
 	return re.MatchString(curRow[0]) && !(reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2 && !re.MatchString(curRow[1]))
 }
 
-func readTournamentHeader(rows [][]string, i, left, right int) (models.Tournament, int) {
+func readTournamentHeader(rows [][]string, i, left, right int) (*models.Tournament, int) {
 	var tournament models.Tournament
 
 	for j := 0; j < 4; j++ {
@@ -88,7 +88,7 @@ func readTournamentHeader(rows [][]string, i, left, right int) (models.Tournamen
 		}
 	}
 
-	return tournament, i + 3
+	return &tournament, i + 3
 }
 
 func createJudoka(curRow []string, lenCurTable int) *models.Judoka {
@@ -111,7 +111,7 @@ func createJudoka(curRow []string, lenCurTable int) *models.Judoka {
 
 func createTournament(left, right, lenCurTable int, rows [][]string) []*models.Tournament {
 	var tournaments []*models.Tournament
-	var tournament models.Tournament
+	var tournament *models.Tournament
 	var curWeightCategoryName string
 	WeightCategories := make(map[string][]*models.Judoka)
 	isNewTournament := false
@@ -143,7 +143,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 			// Сохраняем предыдущий турнир, если он был инициализирован
 			if isNewTournament {
 				tournament.WeightCategories = WeightCategories
-				tournaments = append(tournaments, &tournament)
+				tournaments = append(tournaments, tournament)
 			}
 
 			// Получаем шапку нового турнира
@@ -173,9 +173,10 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 	// Сохраняем последний турнир
 	if isNewTournament {
 		tournament.WeightCategories = WeightCategories
-		tournaments = append(tournaments, &tournament)
+		tournaments = append(tournaments, tournament)
 	}
 
+	fmt.Println(tournaments)
 	return tournaments
 }
 
