@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
+	"judo/internal/lib/replacers"
 	"judo/internal/models"
-	"judo/pkg/replacers"
 
 	"github.com/xuri/excelize/v2"
 )
