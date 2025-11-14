@@ -1,4 +1,4 @@
-package judioio
+package parseio
 
 import (
 	"fmt"
