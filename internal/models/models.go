@@ -43,3 +43,11 @@ type Note struct {
 	COUNTRY_LAST   string
 	SO             string
 }
+
+// Headers defines the Excel column headers matching Note struct fields
+var Headers = []string{
+	"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY",
+	"TOUR_CITY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY",
+	"WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS",
+	"JUDOKA_RUS", "COUNTRY", "COUNTRY_LAST", "SO",
+}

@@ -44,10 +44,11 @@ func (app *App) Run() error {
 			wg.Add(1)
 			go parseio.ToJson(wg, data, file)
 		}
-		wg.Wait()
 		if app.isDuplicates {
-			duplicates.SearchDuplicates()
+			wg.Add(1)
+			go duplicates.SearchDuplicates(wg, data)
 		}
+		wg.Wait()
 	}
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
