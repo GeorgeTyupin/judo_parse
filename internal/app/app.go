@@ -13,7 +13,7 @@ type App struct {
 	createJSON bool
 }
 
-func NewApp(files []string, createJSON bool) *App {
+func NewApp(files []string, isDuplicates, createJSON bool) *App {
 	return &App{
 		files:      files,
 		createJSON: createJSON,
