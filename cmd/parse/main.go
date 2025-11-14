@@ -16,9 +16,9 @@ var createJSON = true
 
 func duplicatesCheckChoice(choice string) (bool, error) {
 	switch strings.ToLower(choice) {
-	case "да":
+	case "y":
 		return true, nil
-	case "нет":
+	case "n":
 		return false, nil
 	default:
 		return false, fmt.Errorf("неверный выбор %s", choice)
@@ -62,7 +62,7 @@ func main() {
 	} else {
 		fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
 		fmt.Scanln(&choiceFile)
-		fmt.Println("Проверять на дубли. Да/нет")
+		fmt.Println("Проверять на дубли. Y/n")
 		fmt.Scanln(&choiceDuplicates)
 	}
 
