@@ -14,10 +14,6 @@ import (
 
 var createJSON = true
 
-type Duplicator interface {
-	checkDuplicates() bool
-}
-
 func duplicatesCheckChoice(choice string) (bool, error) {
 	switch strings.ToLower(choice) {
 	case "да":
@@ -50,12 +46,13 @@ func filesChoice(choice string) ([]string, error) {
 func main() {
 	os.Remove("Сводная таблица.xlsx")
 	os.Remove("USSR_tours.json")
+
+	var isDev bool
 	err := godotenv.Load("configs/.env")
 	if err != nil {
-		fmt.Println("Ошибка загрузки конфига")
+		isDev = true
 	}
-
-	isDev, _ := strconv.ParseBool(os.Getenv("IS_DEV"))
+	isDev, _ = strconv.ParseBool(os.Getenv("IS_DEV"))
 
 	var choiceFile, choiceDuplicates string
 
@@ -74,7 +71,12 @@ func main() {
 		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
 	}
 
-	application := app.NewApp(files, createJSON)
+	isDuplicates, err := duplicatesCheckChoice(choiceDuplicates)
+	if err != nil {
+		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
+	}
+
+	application := app.NewApp(files, isDuplicates, createJSON)
 	if err = application.Run(); err != nil {
 		panic(err)
 	}
