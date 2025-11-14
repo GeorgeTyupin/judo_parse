@@ -2,21 +2,26 @@ package app
 
 import (
 	"fmt"
-	judioio "judo/internal/io"
+
+	"judo/internal/duplicates"
+	parseio "judo/internal/io/parse"
 	"judo/internal/parse"
+
 	"sync"
 	"time"
 )
 
 type App struct {
-	files      []string
-	createJSON bool
+	files        []string
+	isDuplicates bool
+	createJSON   bool
 }
 
 func NewApp(files []string, isDuplicates, createJSON bool) *App {
 	return &App{
-		files:      files,
-		createJSON: createJSON,
+		files:        files,
+		isDuplicates: isDuplicates,
+		createJSON:   createJSON,
 	}
 }
 
@@ -24,7 +29,7 @@ func (app *App) Run() error {
 	wg := &sync.WaitGroup{}
 	start := time.Now()
 
-	table := judioio.InitTable("Сводная таблица")
+	table := parseio.InitTable("Сводная таблица")
 	defer table.SaveTable()
 
 	for _, file := range app.files {
@@ -37,9 +42,12 @@ func (app *App) Run() error {
 		go table.ToExcel(wg, data)
 		if app.createJSON {
 			wg.Add(1)
-			go judioio.ToJson(wg, data, file)
+			go parseio.ToJson(wg, data, file)
 		}
 		wg.Wait()
+		if app.isDuplicates {
+			duplicates.SearchDuplicates()
+		}
 	}
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
