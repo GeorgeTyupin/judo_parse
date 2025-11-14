@@ -1,29 +1,38 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"sync"
-	"time"
+	"strconv"
+	"strings"
 
-	judioio "judo/internal/io"
-	"judo/internal/parse"
+	app "judo/internal/app"
+
+	"github.com/joho/godotenv"
 )
 
-var files = make([]string, 0, 2)
 var createJSON = true
 
-func main() {
-	os.Remove("Сводная таблица.xlsx")
-	os.Remove("USSR_tours.json")
+type Duplicator interface {
+	checkDuplicates() bool
+}
 
-	var choise string
+func duplicatesCheckChoice(choice string) (bool, error) {
+	switch strings.ToLower(choice) {
+	case "да":
+		return true, nil
+	case "нет":
+		return false, nil
+	default:
+		return false, fmt.Errorf("неверный выбор %s", choice)
+	}
+}
 
-	fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
-	// fmt.Scanln(&choise)
-	choise = "1"
+func filesChoice(choice string) ([]string, error) {
+	files := make([]string, 0, 2)
 
-	switch choise {
+	switch choice {
 	case "1":
 		files = append(files, "USSR_tours")
 	case "2":
@@ -32,29 +41,41 @@ func main() {
 		files = append(files, "USSR_tours")
 		files = append(files, "INT_tours")
 	default:
-		fmt.Println("Ошибка ввода, попробуйте еще раз.")
+		return nil, errors.New("ошибка ввода файла")
 	}
 
-	wg := &sync.WaitGroup{}
-	start := time.Now()
+	return files, nil
+}
 
-	table := judioio.InitTable("Сводная таблица")
-	defer table.SaveTable()
-
-	for _, file := range files {
-		data, err := parse.RenderExel(file)
-		if err != nil {
-			panic(fmt.Sprintf("Ошибка чтения исходного файла %s - %v", file, err))
-		}
-
-		wg.Add(1)
-		go table.ToExcel(wg, data)
-		if createJSON {
-			wg.Add(1)
-			go judioio.ToJson(wg, data, file)
-		}
-		wg.Wait()
+func main() {
+	os.Remove("Сводная таблица.xlsx")
+	os.Remove("USSR_tours.json")
+	err := godotenv.Load("configs/.env")
+	if err != nil {
+		fmt.Println("Ошибка загрузки конфига")
 	}
 
-	fmt.Println("Выполнение заняло ", time.Since(start))
+	isDev, _ := strconv.ParseBool(os.Getenv("IS_DEV"))
+
+	var choiceFile, choiceDuplicates string
+
+	if isDev {
+		choiceFile = "1"
+		choiceDuplicates = "нет"
+	} else {
+		fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
+		fmt.Scanln(&choiceFile)
+		fmt.Println("Проверять на дубли. Да/нет")
+		fmt.Scanln(&choiceDuplicates)
+	}
+
+	files, err := filesChoice(choiceFile)
+	if err != nil {
+		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
+	}
+
+	application := app.NewApp(files, createJSON)
+	if err = application.Run(); err != nil {
+		panic(err)
+	}
 }
