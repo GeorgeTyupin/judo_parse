@@ -176,7 +176,6 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 		tournaments = append(tournaments, tournament)
 	}
 
-	fmt.Println(tournaments)
 	return tournaments
 }
 
