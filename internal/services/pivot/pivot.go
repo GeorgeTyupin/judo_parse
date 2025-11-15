@@ -15,7 +15,7 @@ func NewPivotService() *PivotService {
 	}
 }
 
-func (ps *PivotService) ProcessData(data models.ExelSheet) []*models.Note {
+func (ps *PivotService) ProcessData(data models.ExсelSheet) []*models.Note {
 	notes := make([]*models.Note, 0)
 
 	for _, sheet := range data {

@@ -179,10 +179,10 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 	return tournaments
 }
 
-func RenderExel(excelName string) (models.ExelSheet, error) {
+func RenderExel(excelName string) (models.ExсelSheet, error) {
 	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", excelName))
 	sheetList := file.GetSheetList()
-	result := make(models.ExelSheet)
+	result := make(models.ExсelSheet)
 
 	//Проход по всем листам
 	for _, curSheet := range sheetList {

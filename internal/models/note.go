@@ -9,25 +9,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type Judoka struct {
-	Rank      string `json:"RANK"`
-	Name      string `json:"NAME"`
-	FirstName string `json:"FIRSTNAME"`
-	JUDOKA    string `json:"JUDOKA"`
-	Country   string `json:"COUNTRY"`
-	SO        string `json:"SO"`
-}
-
-type Tournament struct {
-	Name             string               `json:"name"`
-	Description      string               `json:"description"`
-	Date             string               `json:"date"`
-	Gender           string               `json:"gender"`
-	WeightCategories map[string][]*Judoka `json:"weight_categories"`
-}
-
-type ExelSheet map[string][]*Tournament
-
 type Note struct {
 	TOURNAMENT     string
 	TOUR_TYPE      string
@@ -140,11 +121,4 @@ func (note *Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
 	table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
 	table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
-}
-
-var Headers = []string{
-	"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY",
-	"TOUR_CITY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY",
-	"WC", "RANK", "NAME", "FIRSTNAME", "JUDOKA", "NAME_RUS", "FIRSTNAME_RUS",
-	"JUDOKA_RUS", "COUNTRY", "COUNTRY_LAST", "SO",
 }
