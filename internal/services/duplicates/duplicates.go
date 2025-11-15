@@ -18,7 +18,7 @@ func NewDuplicateService() *DuplicateService {
 	}
 }
 
-func (ds *DuplicateService) ProcessData(data models.ExelSheet) []*dupio.DuplicateNote {
+func (ds *DuplicateService) ProcessData(data models.ExсelSheet) []*dupio.DuplicateNote {
 	dupNotes := make([]*dupio.DuplicateNote, 0)
 
 	for _, sheet := range data {

@@ -10,7 +10,7 @@ import (
 	"judo/internal/models"
 )
 
-func ToJson(wg *sync.WaitGroup, data models.ExelSheet, file string) {
+func ToJson(wg *sync.WaitGroup, data models.ExсelSheet, file string) {
 	defer wg.Done()
 
 	newJson, err := os.Create(fmt.Sprintf("%s.json", file))
