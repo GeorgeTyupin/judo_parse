@@ -3,9 +3,10 @@ package app
 import (
 	"fmt"
 
-	"judo/internal/duplicates"
-	parseio "judo/internal/io/parse"
+	jsonio "judo/internal/io/json"
 	"judo/internal/parse"
+	"judo/internal/services/duplicates"
+	"judo/internal/services/pivot"
 
 	"sync"
 	"time"
@@ -29,8 +30,11 @@ func (app *App) Run() error {
 	wg := &sync.WaitGroup{}
 	start := time.Now()
 
-	table := parseio.InitTable("Сводная таблица")
-	defer table.SaveTable()
+	pivotService := pivot.NewPivotService()
+	defer pivotService.File.SaveTable()
+
+	duplicateService := duplicates.NewDuplicateService()
+	defer duplicateService.File.SaveTable()
 
 	for _, file := range app.files {
 		data, err := parse.RenderExel(file)
@@ -39,14 +43,23 @@ func (app *App) Run() error {
 		}
 
 		wg.Add(1)
-		go table.ToExcel(wg, data)
+		go func() {
+			defer wg.Done()
+
+			notes := pivotService.ProcessData(data)
+			pivotService.File.Write(notes)
+		}()
+
 		if app.createJSON {
 			wg.Add(1)
-			go parseio.ToJson(wg, data, file)
+			go jsonio.ToJson(wg, data, file)
 		}
 		if app.isDuplicates {
 			wg.Add(1)
-			go duplicates.SearchDuplicates(wg, data)
+			go func() {
+				dupNotes := duplicateService.ProcessData(data)
+				duplicateService.File.Write(dupNotes)
+			}()
 		}
 		wg.Wait()
 	}

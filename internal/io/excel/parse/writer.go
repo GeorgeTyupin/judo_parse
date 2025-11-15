@@ -2,7 +2,6 @@ package parseio
 
 import (
 	"fmt"
-	"sync"
 
 	"judo/internal/models"
 
@@ -41,20 +40,8 @@ func (t *PivotTable) SaveTable() {
 	t.Table.Close()
 }
 
-func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
-	defer wg.Done()
-
-	var cnt = 0
-	for _, sheet := range data {
-		for _, tournament := range sheet {
-			for categoryName, category := range tournament.WeightCategories {
-				for _, man := range category {
-					note := models.NewNote(tournament, man, categoryName)
-
-					note.SaveNote(t.Table, cnt)
-					cnt++
-				}
-			}
-		}
+func (t *PivotTable) Write(notes []*models.Note) {
+	for i, note := range notes {
+		note.SaveNote(t.Table, i)
 	}
 }

@@ -33,6 +33,19 @@ func (d *DuplicateTable) setHeader() {
 	}
 }
 
+func (d *DuplicateTable) SaveTable() {
+	if err := d.Table.SaveAs(fmt.Sprintf("%s.xlsx", d.Name)); err != nil {
+		fmt.Printf("Ошибка сохранения файла %s: %v\n", d.Name, err)
+	}
+	d.Table.Close()
+}
+
+func (d *DuplicateTable) Write(dupNotes []*DuplicateNote) {
+	for i, note := range dupNotes {
+		note.SaveNote(d.Table, i)
+	}
+}
+
 type DuplicateNote struct {
 	Note          *models.Note
 	DuplicateType string
@@ -45,16 +58,9 @@ func NewDuplicateNote(tournament *models.Tournament, man *models.Judoka, categor
 	}
 }
 
-func (dupNote *DuplicateNote) SaveDuplicateNote(table *excelize.File, rowIndex int) {
+func (dupNote *DuplicateNote) SaveNote(table *excelize.File, rowIndex int) {
 	rowNum := rowIndex + 2
 
 	dupNote.Note.SaveNote(table, rowIndex)
 	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), dupNote.DuplicateType)
-}
-
-func (d *DuplicateTable) SaveTable() {
-	if err := d.Table.SaveAs(fmt.Sprintf("%s.xlsx", d.Name)); err != nil {
-		fmt.Printf("Ошибка сохранения файла %s: %v\n", d.Name, err)
-	}
-	d.Table.Close()
 }

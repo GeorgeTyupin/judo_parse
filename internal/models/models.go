@@ -142,7 +142,6 @@ func (note *Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
 }
 
-// Headers defines the Excel column headers matching Note struct fields
 var Headers = []string{
 	"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY",
 	"TOUR_CITY_LAST", "DATE", "YEAR", "MONTH", "GENDER", "WEIGHT_CATEGORY",
