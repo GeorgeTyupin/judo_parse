@@ -34,8 +34,15 @@ func (d *DuplicateTable) setHeader() {
 }
 
 type DuplicateNote struct {
-	Note          models.Note
+	Note          *models.Note
 	DuplicateType string
+}
+
+func NewDuplicateNote(tournament *models.Tournament, man *models.Judoka, categoryName, dupType string) *DuplicateNote {
+	return &DuplicateNote{
+		Note:          models.NewNote(tournament, man, categoryName),
+		DuplicateType: dupType,
+	}
 }
 
 func (dupNote *DuplicateNote) SaveDuplicateNote(table *excelize.File, rowIndex int) {
