@@ -1,0 +1,37 @@
+package duplicates
+
+import (
+	"judo/internal/models"
+
+	dupio "judo/internal/io/excel/duplicates"
+)
+
+type DuplicateService struct {
+	uniqueJudoka []*models.Judoka
+	File         *dupio.DuplicateTable
+}
+
+func NewDuplicateService() *DuplicateService {
+	return &DuplicateService{
+		uniqueJudoka: make([]*models.Judoka, 0),
+		File:         dupio.InitTable("Дубли"),
+	}
+}
+
+func (ds *DuplicateService) ProcessData(data models.ExelSheet) []*dupio.DuplicateNote {
+	dupNotes := make([]*dupio.DuplicateNote, 0)
+
+	for _, sheet := range data {
+		for _, tournament := range sheet {
+			for categoryName, category := range tournament.WeightCategories {
+				for _, man := range category {
+					note := dupio.NewDuplicateNote(tournament, man, categoryName, "Тип1")
+
+					dupNotes = append(dupNotes, note)
+				}
+			}
+		}
+	}
+
+	return dupNotes
+}
