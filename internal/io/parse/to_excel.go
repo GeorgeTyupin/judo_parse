@@ -58,41 +58,14 @@ var monthMap = map[string]string{
 	"December":  "12",
 }
 
-func safeGet(parts []string, index int) string {
+func SafeGet(parts []string, index int) string {
 	if index < len(parts) {
 		return parts[index]
 	}
 	return ""
 }
 
-func (t *PivotTable) saveNote(note models.Note, i int) {
-	rowNum := i + 2
-
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("B%d", rowNum), note.TOUR_TYPE)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("C%d", rowNum), note.TOUR_PLACE)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("D%d", rowNum), note.TOUR_CITY)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("E%d", rowNum), note.TOUR_COUNTRY)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("F%d", rowNum), note.TOUR_CITY_LAST)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("G%d", rowNum), note.DATE)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.GENDER)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.WeightCategory)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.WC)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.RANK)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.NAME)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.FIRSTNAME)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.JUDOKA)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME_RUS)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
-	t.Table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
-}
-
-func formatDate(date string) string {
+func FormatDate(date string) string {
 	var result string
 
 	if len(date) < 5 {
@@ -124,8 +97,8 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
 					descParts := strings.Split(tournament.Description, "—")
-					tourType := strings.TrimSpace(safeGet(descParts, 0))
-					tourPlace := strings.TrimSpace(safeGet(descParts, 1))
+					tourType := strings.TrimSpace(SafeGet(descParts, 0))
+					tourPlace := strings.TrimSpace(SafeGet(descParts, 1))
 
 					tourCity := ""
 					if placeParts := strings.SplitN(tourPlace, ",", 2); len(placeParts) > 0 {
@@ -165,7 +138,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						TOUR_CITY_LAST: replacers.NormalizeCityName(tourCity),
 						DATE:           tournament.Date,
 						YEAR:           year,
-						MONTH:          formatDate(tournament.Date),
+						MONTH:          FormatDate(tournament.Date),
 						GENDER:         tournament.Gender,
 						WeightCategory: categoryName,
 						WC:             wc,
@@ -181,7 +154,7 @@ func (t *PivotTable) ToExcel(wg *sync.WaitGroup, data models.ExelSheet) {
 						SO:             man.SO,
 					}
 
-					t.saveNote(note, cnt)
+					note.SaveNote(t.Table, cnt)
 					cnt++
 				}
 			}
