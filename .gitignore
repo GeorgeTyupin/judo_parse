@@ -3,8 +3,9 @@
 .idea
 .zed
 *.xlsx
+USSR_tours.xlsx
+INT_tours.xlsx
 *.json
-!*_tours.xlsx
 ~*
 /bin
 .DS_STORE
