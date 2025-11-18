@@ -1,18 +1,22 @@
 package pivot
 
 import (
-	parseio "judo/internal/io/excel/parse"
+	"judo/internal/interfaces"
 	"judo/internal/models"
 )
 
 type PivotService struct {
-	Writer *parseio.Writer
+	Writers map[string]interfaces.Writer
 }
 
 func NewPivotService() *PivotService {
 	return &PivotService{
-		Writer: parseio.NewWriter("Сводная таблица"),
+		Writers: make(map[string]interfaces.Writer),
 	}
+}
+
+func (ps *PivotService) RegisterWriter(writerName string, writer interfaces.Writer) {
+	ps.Writers[writerName] = writer
 }
 
 func (ps *PivotService) ProcessData(data models.ExсelSheet) []*models.Note {

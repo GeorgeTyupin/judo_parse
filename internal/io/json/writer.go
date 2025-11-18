@@ -5,26 +5,46 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
 
 	"judo/internal/models"
 )
 
-func ToJson(wg *sync.WaitGroup, data models.ExсelSheet, file string) {
-	defer wg.Done()
+type JsonWriter struct {
+	Name string
+	File *os.File
+}
 
-	newJson, err := os.Create(fmt.Sprintf("%s.json", file))
+func NewWriter(name string) *JsonWriter {
+	newJson, err := os.Create(fmt.Sprintf("%s.json", name))
 	if err != nil {
 		log.Fatalf("Ошибка создания файла: %v", err)
 	}
-	defer newJson.Close()
 
-	encoder := json.NewEncoder(newJson)
+	jsonFile := JsonWriter{
+		Name: name,
+		File: newJson,
+	}
+
+	return &jsonFile
+}
+
+func (w *JsonWriter) Write(data any) {
+	sheet, ok := data.(models.ExсelSheet)
+	if !ok {
+		fmt.Printf("Ошибка: ожидался тип models.ExсelSheet, получен %T\n", data)
+		return
+	}
+
+	encoder := json.NewEncoder(w.File)
 	encoder.SetIndent("", "    ")
 
-	err = encoder.Encode(&data)
+	err := encoder.Encode(&sheet)
 
 	if err != nil {
 		log.Fatalf("Ошибка записи в файл: %v", err)
 	}
+}
+
+func (w *JsonWriter) SaveFile() {
+	w.File.Close()
 }

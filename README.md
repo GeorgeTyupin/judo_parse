@@ -67,7 +67,10 @@ judo/
 │
 ├── internal/
 │   ├── app/                # Слой приложения
-│   │   └── app.go         # Оркестрация сервисов, управление потоками
+│   │   └── app.go         # Оркестрация сервисов, управление потоками, DI
+│   │
+│   ├── interfaces/         # Общие интерфейсы
+│   │   └── writer.go      # Интерфейс Writer для всех writers
 │   │
 │   ├── models/             # Модели данных (Domain layer)
 │   │   ├── judoka.go      # Модель спортсмена
@@ -76,30 +79,34 @@ judo/
 │   │   └── excel_sheet.go # Структура листов Excel
 │   │
 │   ├── services/           # Бизнес-логика
+│   │   ├── parse/         # Сервис парсинга Excel
+│   │   │   └── parse.go   # ParseService с Reader
 │   │   ├── pivot/         # Создание сводной таблицы
-│   │   │   └── pivot.go
+│   │   │   └── pivot.go   # PivotService с DI writers
 │   │   └── duplicates/    # Поиск дублей
-│   │       ├── duplicates.go
+│   │       ├── duplicates.go  # DuplicateService с DI writers
 │   │       └── dupfind/
 │   │           └── search.go  # Алгоритмы поиска дублей
 │   │
-│   ├── parse/              # Парсинг исходных данных
-│   │   └── parse.go       # Логика чтения Excel файлов
-│   │
 │   ├── io/                 # Слой ввода-вывода
 │   │   ├── excel/
-│   │   │   ├── parse/     # Запись сводной таблицы
-│   │   │   └── duplicates/ # Запись таблицы дублей
+│   │   │   ├── parse/     # Excel I/O для парсинга
+│   │   │   │   ├── reader.go   # ExcelReader (чтение файлов)
+│   │   │   │   └── writer.go   # ExcelWriter (сводная таблица)
+│   │   │   └── duplicates/     # Excel I/O для дублей
+│   │   │       └── writer.go   # ExcelWriter (таблица дублей)
 │   │   └── json/
-│   │       └── writer.go  # Экспорт в JSON
+│   │       └── writer.go  # JsonWriter (экспорт в JSON)
 │   │
 │   └── lib/                # Утилиты и вспомогательные функции
 │       ├── replacers/
 │       │   ├── transliterate.go  # Транслитерация имён
 │       │   └── cities.go         # Нормализация городов
 │       └── utils/
-│           └── note/
-│               └── note.go       # Утилиты для работы с записями
+│           ├── note/
+│           │   └── note.go       # Утилиты для работы с записями
+│           └── parse/
+│               └── parseutils.go # Утилиты парсинга (ReNum, IsValidDataRow)
 │
 └── configs/
     └── .env               # Конфигурация (режим разработки)
@@ -113,32 +120,51 @@ judo/
 └──────┬──────┘
        │
        ▼
-┌─────────────┐
-│   app.go    │  Оркестрация (запуск сервисов, goroutines)
-└──────┬──────┘
+┌──────────────────────────────────────────────────────────┐
+│                       app.go                             │
+│  • Создаёт ParseService с массивом файлов               │
+│  • Регистрирует Writers в сервисах через DI             │
+│  • Запускает обработку в горутинах                      │
+└──────┬───────────────────────────────────────────────────┘
        │
-       ├──────────────────┬──────────────────┬─────────────────┐
-       ▼                  ▼                  ▼                 ▼
-┌──────────┐      ┌──────────────┐   ┌──────────────┐   ┌──────────┐
-│ parse.go │      │ pivot.go     │   │duplicates.go │   │ json.go  │
-│  (читает │      │ (обрабатывает│   │ (ищет дубли) │   │(экспорт) │
-│  Excel)  │  ──> │  данные)     │   │              │   │          │
-└──────────┘      └──────┬───────┘   └──────┬───────┘   └──────────┘
-                         │                  │
-                         ▼                  ▼
-                  ┌──────────────┐   ┌──────────────┐
-                  │ excel/parse/ │   │excel/duplica-│
-                  │ (запись      │   │tes/ (запись  │
-                  │  результата) │   │  дублей)     │
-                  └──────────────┘   └──────────────┘
+       ├─────────────────┬──────────────────┬──────────────┐
+       ▼                 ▼                  ▼              ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────┐
+│ ParseService │  │ PivotService │  │DuplicateSvc  │  │JsonWriter│
+│              │  │              │  │              │  │          │
+│ • Reader     │  │ • Writers[]  │  │ • Writers[]  │  │(опционал)│
+│ • ParseTour  │  │ • ProcessData│  │ • ProcessData│  │          │
+│   naments()  │  │ • RegisterW  │  │ • RegisterW  │  │          │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └────┬─────┘
+       │                 │                 │               │
+       │ возвращает      │ внедрённые      │ внедрённые    │
+       │ данные          │ writers:        │ writers:      │
+       │                 │                 │               │
+       ▼                 ▼                 ▼               ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────┐
+│  Reader.go   │  │ExcelWriter   │  │ExcelWriter   │  │JsonWriter│
+│              │  │(pivot)       │  │(duplicates)  │  │          │
+│• Read()      │  │• Write(any)  │  │• Write(any)  │  │• Write() │
+│• map[sheet]  │  │• SaveFile()  │  │• SaveFile()  │  │• SaveFile│
+│  [][]string  │  │              │  │              │  │  ()      │
+└──────────────┘  └──────────────┘  └──────────────┘  └──────────┘
+
+Интерфейс Writer:
+  type Writer interface {
+    Write(data any)
+    SaveFile()
+  }
 ```
 
 ### Ключевые принципы
 
 1. **Разделение ответственности**: Каждый модуль решает одну задачу
-2. **Dependency Injection**: Сервисы не зависят от конкретных реализаций
-3. **Параллелизм**: Использование goroutines для независимых операций
-4. **Defer для гарантированного сохранения**: `defer service.File.SaveTable()`
+2. **Dependency Injection**: Сервисы получают Writers через `RegisterWriter()`
+3. **Interface-based design**: Все writers реализуют интерфейс `interfaces.Writer`
+4. **Type-safe operations**: Type assertions с проверкой `ok` в каждом writer
+5. **Константы для ключей**: `ExcelWriterKey`, `JsonWriterKey` вместо magic strings
+6. **Параллелизм**: Использование goroutines для независимых операций записи
+7. **Defer для гарантированного сохранения**: `defer pivotService.Writers[key].SaveFile()`
 
 ---
 

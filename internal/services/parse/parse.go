@@ -26,7 +26,7 @@ func NewParseService(fileNames []string) (*ParseService, error) {
 }
 
 func (ps *ParseService) ParseTournaments() (models.ExсelSheet, error) {
-	data, err := ps.Reader.ReadSheets()
+	data, err := ps.Reader.Read()
 	if err != nil {
 		return nil, err
 	}

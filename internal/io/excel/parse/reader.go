@@ -29,7 +29,7 @@ func NewReader(fileNames []string) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) ReadSheets() (map[string][][]string, error) {
+func (r *Reader) Read() (map[string][][]string, error) {
 	data := make(map[string][][]string)
 
 	for i, file := range r.Files {
@@ -40,10 +40,6 @@ func (r *Reader) ReadSheets() (map[string][][]string, error) {
 				continue
 			}
 
-			// Если в разных файлах есть листы с одинаковым названием, они перезапишутся.
-			// Поэтому используем ключ вида "filename_sheetname".
-			curSheet = fmt.Sprintf("%s_%s", r.fileNames[i], curSheet)
-
 			fmt.Println(curSheet)
 
 			rows, err := file.GetRows(curSheet)
@@ -52,6 +48,10 @@ func (r *Reader) ReadSheets() (map[string][][]string, error) {
 			}
 
 			rows = rows[4:]
+
+			// Если в разных файлах есть листы с одинаковым названием, они перезапишутся.
+			// Поэтому используем ключ вида "filename_sheetname".
+			curSheet = fmt.Sprintf("%s_%s", r.fileNames[i], curSheet)
 
 			data[curSheet] = rows
 		}

@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 
+	dupio "judo/internal/io/excel/duplicates"
+	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	"judo/internal/services/duplicates"
 	"judo/internal/services/parse"
@@ -10,6 +12,12 @@ import (
 
 	"sync"
 	"time"
+)
+
+const (
+	ExcelWriterKey = "ExcelWriter"
+	DupWriterKey   = "DupWriter"
+	JsonWriterKey  = "JsonWriter"
 )
 
 type App struct {
@@ -43,29 +51,42 @@ func (app *App) Run() error {
 	}
 
 	pivotService := pivot.NewPivotService()
-	defer pivotService.Writer.SaveTable()
+	excelWriter := parseio.NewWriter("Сводная таблица")
+	pivotService.RegisterWriter(ExcelWriterKey, excelWriter)
+	defer pivotService.Writers[ExcelWriterKey].SaveFile()
 
 	duplicateService := duplicates.NewDuplicateService()
-	defer duplicateService.Writer.SaveTable()
+	dupWriter := dupio.NewWriter("Дубли")
+	duplicateService.RegisterWriter(DupWriterKey, dupWriter)
+	defer duplicateService.Writers[DupWriterKey].SaveFile()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		notes := pivotService.ProcessData(data)
-		pivotService.Writer.Write(notes)
+		pivotService.Writers[ExcelWriterKey].Write(notes)
 	}()
 
 	if app.createJSON {
+		jsonWriter := jsonio.NewWriter("Data")
+		pivotService.RegisterWriter(JsonWriterKey, jsonWriter)
+		defer pivotService.Writers[JsonWriterKey].SaveFile()
+
 		wg.Add(1)
-		go jsonio.ToJson(wg, data, app.files[0])
+		go func() {
+			defer wg.Done()
+
+			pivotService.Writers[JsonWriterKey].Write(data)
+		}()
 	}
+
 	if app.isDuplicates {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			dupNotes := duplicateService.ProcessData(data)
-			duplicateService.Writer.Write(dupNotes)
+			duplicateService.Writers[DupWriterKey].Write(dupNotes)
 		}()
 	}
 	wg.Wait()
