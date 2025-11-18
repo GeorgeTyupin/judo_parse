@@ -8,17 +8,17 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type PivotTable struct {
-	Name  string
-	Table *excelize.File
+type Writer struct {
+	Name string
+	File *excelize.File
 }
 
-func InitTable(name string) *PivotTable {
+func NewWriter(name string) *Writer {
 	table := excelize.NewFile()
 
-	pTable := PivotTable{
-		Name:  name,
-		Table: table,
+	pTable := Writer{
+		Name: name,
+		File: table,
 	}
 
 	pTable.setHeader()
@@ -26,22 +26,22 @@ func InitTable(name string) *PivotTable {
 	return &pTable
 }
 
-func (t *PivotTable) setHeader() {
+func (t *Writer) setHeader() {
 	for i, header := range models.Headers {
 		cell := fmt.Sprintf("%c1", 'A'+i)
-		t.Table.SetCellValue("Sheet1", cell, header)
+		t.File.SetCellValue("Sheet1", cell, header)
 	}
 }
 
-func (t *PivotTable) SaveTable() {
-	if err := t.Table.SaveAs(fmt.Sprintf("%s.xlsx", t.Name)); err != nil {
+func (t *Writer) SaveTable() {
+	if err := t.File.SaveAs(fmt.Sprintf("%s.xlsx", t.Name)); err != nil {
 		fmt.Printf("Ошибка сохранения файла %s: %v\n", t.Name, err)
 	}
-	t.Table.Close()
+	t.File.Close()
 }
 
-func (t *PivotTable) Write(notes []*models.Note) {
+func (t *Writer) Write(notes []*models.Note) {
 	for i, note := range notes {
-		note.SaveNote(t.Table, i)
+		note.SaveNote(t.File, i)
 	}
 }

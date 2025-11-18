@@ -8,17 +8,17 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-type DuplicateTable struct {
-	Name  string
-	Table *excelize.File
+type Writer struct {
+	Name string
+	File *excelize.File
 }
 
-func InitTable(name string) *DuplicateTable {
+func NewWriter(name string) *Writer {
 	table := excelize.NewFile()
 
-	dTable := DuplicateTable{
-		Name:  name,
-		Table: table,
+	dTable := Writer{
+		Name: name,
+		File: table,
 	}
 
 	dTable.setHeader()
@@ -26,23 +26,23 @@ func InitTable(name string) *DuplicateTable {
 	return &dTable
 }
 
-func (d *DuplicateTable) setHeader() {
+func (d *Writer) setHeader() {
 	for i, header := range models.Headers {
 		cell := fmt.Sprintf("%c1", 'A'+i)
-		d.Table.SetCellValue("Sheet1", cell, header)
+		d.File.SetCellValue("Sheet1", cell, header)
 	}
 }
 
-func (d *DuplicateTable) SaveTable() {
-	if err := d.Table.SaveAs(fmt.Sprintf("%s.xlsx", d.Name)); err != nil {
+func (d *Writer) SaveTable() {
+	if err := d.File.SaveAs(fmt.Sprintf("%s.xlsx", d.Name)); err != nil {
 		fmt.Printf("Ошибка сохранения файла %s: %v\n", d.Name, err)
 	}
-	d.Table.Close()
+	d.File.Close()
 }
 
-func (d *DuplicateTable) Write(dupNotes []*DuplicateNote) {
+func (d *Writer) Write(dupNotes []*DuplicateNote) {
 	for i, note := range dupNotes {
-		note.SaveNote(d.Table, i)
+		note.SaveNote(d.File, i)
 	}
 }
 

@@ -1,56 +1,64 @@
 package parse
 
 import (
-	"fmt"
-	"regexp"
 	"strings"
 
+	parseio "judo/internal/io/excel/parse"
+	parseutils "judo/internal/lib/utils/parse"
 	"judo/internal/models"
-
-	"github.com/xuri/excelize/v2"
 )
 
-var re = regexp.MustCompile(`\S+`)
-var reNum = regexp.MustCompile(`\d+`)
-
-func findLenTables(row []string) []int {
-	var lenTables []int
-	var arr []int
-
-	for _, elem := range row {
-		if elem == "|" {
-			arr = append(arr, 1)
-		} else if strings.ToLower(elem) == "end" {
-			arr = append(arr, 2)
-		} else {
-			arr = append(arr, 0)
-		}
-	}
-
-	lenArr := len(arr)
-	for i := 1; i < lenArr; i++ {
-		if arr[i] == 0 {
-			start := i
-			for i < lenArr && arr[i] == 0 {
-				i++
-			}
-			lenTables = append(lenTables, i-start)
-			if i < lenArr && arr[i] == 2 {
-				break
-			}
-		} else {
-			i++
-		}
-	}
-
-	return lenTables
+type ParseService struct {
+	Reader *parseio.Reader
 }
 
-func isValidDataRow(curRow []string) bool {
-	if len(curRow) == 0 {
-		return false
+func NewParseService(fileNames []string) (*ParseService, error) {
+	reader, err := parseio.NewReader(fileNames)
+	if err != nil {
+		return nil, err
 	}
-	return re.MatchString(curRow[0]) && !(reNum.MatchString(curRow[0]) && len(curRow[0]) <= 2 && !re.MatchString(curRow[1]))
+
+	service := &ParseService{
+		Reader: reader,
+	}
+
+	return service, nil
+}
+
+func (ps *ParseService) ParseTournaments() (models.ExсelSheet, error) {
+	data, err := ps.Reader.ReadSheets()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(models.ExсelSheet)
+
+	//Проход по всем листам
+	for curSheet, rows := range data {
+		if len(rows) < 2 {
+			continue
+		}
+
+		lenTables := parseutils.FindLenTables(rows[1])
+
+		left := 1
+
+		//Проход по всей таблице
+		for _, lenCurTable := range lenTables {
+			right := left + lenCurTable
+
+			tournaments := createTournament(left, right, lenCurTable, rows)
+
+			if _, exists := result[curSheet]; !exists {
+				result[curSheet] = make([]*models.Tournament, 0)
+			}
+			result[curSheet] = append(result[curSheet], tournaments...)
+
+			left = right + 1
+		}
+	}
+
+	return result, nil
 }
 
 func readTournamentHeader(rows [][]string, i, left, right int) (*models.Tournament, int) {
@@ -91,24 +99,6 @@ func readTournamentHeader(rows [][]string, i, left, right int) (*models.Tourname
 	return &tournament, i + 3
 }
 
-func createJudoka(curRow []string, lenCurTable int) *models.Judoka {
-	athlete := models.Judoka{
-		Rank:      curRow[0],
-		Name:      curRow[1],
-		FirstName: curRow[2],
-		JUDOKA:    curRow[3],
-	}
-
-	if lenCurTable > 5 {
-		athlete.SO = strings.Trim(curRow[4], `'`)
-		athlete.Country = curRow[5]
-	} else if lenCurTable > 4 {
-		athlete.Country = curRow[4]
-	}
-
-	return &athlete
-}
-
 func createTournament(left, right, lenCurTable int, rows [][]string) []*models.Tournament {
 	var tournaments []*models.Tournament
 	var tournament *models.Tournament
@@ -135,7 +125,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 		}
 
 		//Отсеиваем пустые и другие строки без нужной информации
-		if !isValidDataRow(curRow) {
+		if !parseutils.IsValidDataRow(curRow) {
 			continue
 		}
 
@@ -154,13 +144,13 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 			curWeightCategoryName = ""
 		} else {
 			// fmt.Println(curRow[0])
-			if reNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
+			if parseutils.ReNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
 
 				if len(curRow[0]) > 2 {
 					curWeightCategoryName = curRow[0]
 					WeightCategories[curWeightCategoryName] = make([]*models.Judoka, 0)
 				} else {
-					athlete := createJudoka(curRow, lenCurTable)
+					athlete := models.NewJudoka(curRow, lenCurTable)
 					WeightCategories[curWeightCategoryName] = append(WeightCategories[curWeightCategoryName], athlete)
 				}
 			} else {
@@ -177,44 +167,4 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 	}
 
 	return tournaments
-}
-
-func RenderExel(excelName string) (models.ExсelSheet, error) {
-	file, _ := excelize.OpenFile(fmt.Sprintf("%s.xlsx", excelName))
-	sheetList := file.GetSheetList()
-	result := make(models.ExсelSheet)
-
-	//Проход по всем листам
-	for _, curSheet := range sheetList {
-		if string(curSheet[0]) == "_" {
-			continue
-		}
-		rows, err := file.GetRows(curSheet)
-		if err != nil {
-			return nil, err
-		}
-
-		rows = rows[4:]
-		lenTables := findLenTables(rows[1])
-
-		fmt.Println(curSheet)
-
-		left := 1
-
-		//Проход по всей таблице
-		for _, lenCurTable := range lenTables {
-			right := left + lenCurTable
-
-			tournaments := createTournament(left, right, lenCurTable, rows)
-
-			if _, exists := result[curSheet]; !exists {
-				result[curSheet] = make([]*models.Tournament, 0)
-			}
-			result[curSheet] = append(result[curSheet], tournaments...)
-
-			left = right + 1
-		}
-	}
-
-	return result, nil
 }

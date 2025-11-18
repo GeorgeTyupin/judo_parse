@@ -8,13 +8,13 @@ import (
 
 type DuplicateService struct {
 	uniqueJudoka []*models.Judoka
-	File         *dupio.DuplicateTable
+	Writer       *dupio.Writer
 }
 
 func NewDuplicateService() *DuplicateService {
 	return &DuplicateService{
 		uniqueJudoka: make([]*models.Judoka, 0),
-		File:         dupio.InitTable("Дубли"),
+		Writer:       dupio.NewWriter("Дубли"),
 	}
 }
 

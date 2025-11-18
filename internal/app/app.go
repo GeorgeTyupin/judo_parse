@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	jsonio "judo/internal/io/json"
-	"judo/internal/parse"
 	"judo/internal/services/duplicates"
+	"judo/internal/services/parse"
 	"judo/internal/services/pivot"
 
 	"sync"
@@ -30,39 +30,45 @@ func (app *App) Run() error {
 	wg := &sync.WaitGroup{}
 	start := time.Now()
 
+	// Создаем ParseService со всеми файлами
+	parseService, err := parse.NewParseService(app.files)
+	if err != nil {
+		return fmt.Errorf("ошибка инициализации ParseService - %w", err)
+	}
+
+	// Парсим все файлы сразу
+	data, err := parseService.ParseTournaments()
+	if err != nil {
+		return fmt.Errorf("ошибка парсинга файлов - %w", err)
+	}
+
 	pivotService := pivot.NewPivotService()
-	defer pivotService.File.SaveTable()
+	defer pivotService.Writer.SaveTable()
 
 	duplicateService := duplicates.NewDuplicateService()
-	defer duplicateService.File.SaveTable()
+	defer duplicateService.Writer.SaveTable()
 
-	for _, file := range app.files {
-		data, err := parse.RenderExel(file)
-		if err != nil {
-			return fmt.Errorf("ошибка чтения исходного файла %s - %w", file, err)
-		}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
+		notes := pivotService.ProcessData(data)
+		pivotService.Writer.Write(notes)
+	}()
+
+	if app.createJSON {
+		wg.Add(1)
+		go jsonio.ToJson(wg, data, app.files[0])
+	}
+	if app.isDuplicates {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-
-			notes := pivotService.ProcessData(data)
-			pivotService.File.Write(notes)
+			dupNotes := duplicateService.ProcessData(data)
+			duplicateService.Writer.Write(dupNotes)
 		}()
-
-		if app.createJSON {
-			wg.Add(1)
-			go jsonio.ToJson(wg, data, file)
-		}
-		if app.isDuplicates {
-			wg.Add(1)
-			go func() {
-				dupNotes := duplicateService.ProcessData(data)
-				duplicateService.File.Write(dupNotes)
-			}()
-		}
-		wg.Wait()
 	}
+	wg.Wait()
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
 	return nil

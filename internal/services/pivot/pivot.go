@@ -6,12 +6,12 @@ import (
 )
 
 type PivotService struct {
-	File *parseio.PivotTable
+	Writer *parseio.Writer
 }
 
 func NewPivotService() *PivotService {
 	return &PivotService{
-		File: parseio.InitTable("Сводная таблица"),
+		Writer: parseio.NewWriter("Сводная таблица"),
 	}
 }
 
