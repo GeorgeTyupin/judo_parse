@@ -58,7 +58,7 @@ func main() {
 
 	if isDev {
 		choiceFile = "1"
-		choiceDuplicates = "нет"
+		choiceDuplicates = "n"
 	} else {
 		fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
 		fmt.Scanln(&choiceFile)
