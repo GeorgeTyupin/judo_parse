@@ -42,28 +42,28 @@ func CheckType2(judoka, uJudoka *models.Judoka) bool {
 		judoka.FirstName[0] == uJudoka.FirstName[0]
 }
 
-// CheckType3 - Тип 3: Name (90%)
-//
-// Анализируемые поля: NAME
-// Логика: Поиск записей с похожими на 90% фамилиями (NAME)
-// Критерий: Сходство фамилий >= 90%
-// Обозначение в листе "Дубли": Name (90%)
-func CheckType3(judoka, uJudoka *models.Judoka) bool {
-	similarity, err := edlib.StringsSimilarity(judoka.Name, uJudoka.Name, edlib.Levenshtein)
-	return err == nil &&
-		similarity >= MinSimilarityThreshold
-
-}
-
-// CheckType4 - Тип 4: Name=Name (First Name (-10%))
+// CheckType3 - Тип 3: Name=Name (First Name (-10%))
 //
 // Анализируемые поля: NAME, FIRSTNAME
 // Логика: Поиск записей с одинаковыми фамилиями (NAME), но отличающимися именами (FIRSTNAME)
 // Критерий: NAME совпадают полностью, FIRSTNAME отличаются на ~10%
 // Обозначение в листе "Дубли": Name=Name (First Name (-10%))
-func CheckType4(judoka, uJudoka *models.Judoka) bool {
+func CheckType3(judoka, uJudoka *models.Judoka) bool {
 	similarity, err := edlib.StringsSimilarity(judoka.FirstName, uJudoka.FirstName, edlib.Levenshtein)
 	return err == nil &&
 		judoka.Name == uJudoka.Name &&
-		similarity >= MinSimilarityThreshold
+		MinSimilarityThreshold <= similarity && similarity < 1
+}
+
+// CheckType4 - Тип 4: Name (90%)
+//
+// Анализируемые поля: NAME
+// Логика: Поиск записей с похожими на 90% фамилиями (NAME)
+// Критерий: Сходство фамилий >= 90%
+// Обозначение в листе "Дубли": Name (90%)
+func CheckType4(judoka, uJudoka *models.Judoka) bool {
+	similarity, err := edlib.StringsSimilarity(judoka.Name, uJudoka.Name, edlib.Levenshtein)
+	return err == nil &&
+		MinSimilarityThreshold <= similarity && similarity < 1
+
 }

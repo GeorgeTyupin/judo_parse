@@ -45,6 +45,7 @@ func filesChoice(choice string) ([]string, error) {
 
 func main() {
 	os.Remove("Сводная таблица.xlsx")
+	os.Remove("Дубли.xlsx")
 	os.Remove("USSR_tours.json")
 
 	var isDev bool

@@ -4,6 +4,7 @@ import (
 	"judo/internal/interfaces"
 	"judo/internal/models"
 	"judo/internal/services/duplicates/dupfind"
+	"sort"
 
 	dupio "judo/internal/io/excel/duplicates"
 )
@@ -42,6 +43,10 @@ func (ds *DuplicateService) ProcessData(data models.ExсelSheet) []*dupio.Duplic
 			}
 		}
 	}
+
+	sort.Slice(dupNotes, func(i, j int) bool {
+		return dupNotes[i].Note.JUDOKA < dupNotes[j].Note.JUDOKA
+	})
 
 	return dupNotes
 }
