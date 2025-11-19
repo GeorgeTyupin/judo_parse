@@ -1,37 +1,40 @@
 package dupfind
 
-// DuplicateType1 - Тип 1: Name-First Name-Country
-//
-// Анализируемые поля: NAME, FIRSTNAME, COUNTRY
-// Логика: Совпадают фамилии (NAME), страна (COUNTRY) и первая буква имени (FIRSTNAME)
-// Критерий: Длина (количество символов) в FIRSTNAME <= 2
-// Обозначение в листе "Дубли": Name-First Name-Country
-type DuplicateType1 struct {
+import "judo/internal/models"
+
+const (
+	NotDuplicate = "Не дубликат"
+	Type1        = "Name-First Name-Country"
+	Type2        = "Name-First Name"
+	Type3        = "Name (90%)"
+	Type4        = "Name=Name (First Name (-10%))"
+)
+
+type DuplicateFinder struct {
+	uniqueJudoka []*models.Judoka
 }
 
-// DuplicateType2 - Тип 2: Name-First Name
-//
-// Анализируемые поля: NAME, FIRSTNAME
-// Логика: Совпадают фамилии (NAME) и первая буква имени (FIRSTNAME)
-// Критерий: Длина (количество символов) в FIRSTNAME <= 2
-// Обозначение в листе "Дубли": Name-First Name
-type DuplicateType2 struct {
+func NewDuplicateFinder() *DuplicateFinder {
+	return &DuplicateFinder{
+		make([]*models.Judoka, 0),
+	}
 }
 
-// DuplicateType3 - Тип 3: Name (90%)
-//
-// Анализируемые поля: NAME
-// Логика: Поиск записей с похожими на 90% фамилиями (NAME)
-// Критерий: Сходство фамилий >= 90%
-// Обозначение в листе "Дубли": Name (90%)
-type DuplicateType3 struct {
-}
+func (df *DuplicateFinder) GetDuplicateType(judoka *models.Judoka) string {
+	for _, uJudoka := range df.uniqueJudoka {
+		switch {
+		case CheckType1(judoka, uJudoka):
+			return Type1
+		case CheckType2(judoka, uJudoka):
+			return Type2
+		case CheckType3(judoka, uJudoka):
+			return Type3
+		case CheckType4(judoka, uJudoka):
+			return Type4
+		}
+	}
 
-// DuplicateType4 - Тип 4: Name=Name (First Name (-10%))
-//
-// Анализируемые поля: NAME, FIRSTNAME
-// Логика: Поиск записей с одинаковыми фамилиями (NAME), но отличающимися именами (FIRSTNAME)
-// Критерий: NAME совпадают полностью, FIRSTNAME отличаются на ~10%
-// Обозначение в листе "Дубли": Name=Name (First Name (-10%))
-type DuplicateType4 struct {
+	df.uniqueJudoka = append(df.uniqueJudoka, judoka)
+
+	return NotDuplicate
 }
