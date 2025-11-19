@@ -8,7 +8,8 @@ import (
 
 const (
 	MaxShortNameLength     = 2   // Максимальная длина сокращенного имени
-	MinSimilarityThreshold = 0.9 // Необходимая схожесть строк
+	MinSimilarityThreshold = 0.9 // Минимальная необходимая схожесть строк
+	MaxSimilarityThreshold = 1   // Максимальная допустимая
 )
 
 // CheckType1 - Тип 1: Name-First Name-Country
@@ -52,7 +53,7 @@ func CheckType3(judoka, uJudoka *models.Judoka) bool {
 	similarity, err := edlib.StringsSimilarity(judoka.FirstName, uJudoka.FirstName, edlib.Levenshtein)
 	return err == nil &&
 		judoka.Name == uJudoka.Name &&
-		MinSimilarityThreshold <= similarity && similarity < 1
+		MinSimilarityThreshold <= similarity && similarity < MaxSimilarityThreshold
 }
 
 // CheckType4 - Тип 4: Name (90%)
@@ -64,6 +65,6 @@ func CheckType3(judoka, uJudoka *models.Judoka) bool {
 func CheckType4(judoka, uJudoka *models.Judoka) bool {
 	similarity, err := edlib.StringsSimilarity(judoka.Name, uJudoka.Name, edlib.Levenshtein)
 	return err == nil &&
-		MinSimilarityThreshold <= similarity && similarity < 1
+		MinSimilarityThreshold <= similarity && similarity < MaxSimilarityThreshold
 
 }
