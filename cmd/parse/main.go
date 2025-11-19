@@ -50,7 +50,7 @@ func main() {
 	var isDev bool
 	err := godotenv.Load("configs/.env")
 	if err != nil {
-		isDev = true
+		isDev = false
 	}
 	isDev, _ = strconv.ParseBool(os.Getenv("IS_DEV"))
 
