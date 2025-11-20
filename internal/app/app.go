@@ -55,11 +55,6 @@ func (app *App) Run() error {
 	pivotService.RegisterWriter(ExcelWriterKey, excelWriter)
 	defer pivotService.Writers[ExcelWriterKey].SaveFile()
 
-	duplicateService := duplicates.NewDuplicateService()
-	dupWriter := dupio.NewWriter("Дубли")
-	duplicateService.RegisterWriter(DupWriterKey, dupWriter)
-	defer duplicateService.Writers[DupWriterKey].SaveFile()
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -82,6 +77,11 @@ func (app *App) Run() error {
 	}
 
 	if app.isDuplicates {
+		duplicateService := duplicates.NewDuplicateService()
+		dupWriter := dupio.NewWriter("Дубли")
+		duplicateService.RegisterWriter(DupWriterKey, dupWriter)
+		defer duplicateService.Writers[DupWriterKey].SaveFile()
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
