@@ -27,7 +27,10 @@ func NewWriter(name string) *ExcelWriter {
 }
 
 func (d *ExcelWriter) setHeader() {
-	for i, header := range models.Headers {
+	dupHeaders := append([]string{}, models.Headers...)
+	dupHeaders = append(dupHeaders, "TYPE", "ORIGINAL")
+
+	for i, header := range dupHeaders {
 		cell := fmt.Sprintf("%c1", 'A'+i)
 		d.File.SetCellValue("Sheet1", cell, header)
 	}
@@ -53,14 +56,16 @@ func (d *ExcelWriter) Write(data any) {
 }
 
 type DuplicateNote struct {
-	Note          *models.Note
-	DuplicateType string
+	Note           *models.Note
+	DuplicateType  string
+	OriginalJudoka string
 }
 
-func NewDuplicateNote(tournament *models.Tournament, man *models.Judoka, categoryName, dupType string) *DuplicateNote {
+func NewDuplicateNote(tournament *models.Tournament, man *models.Judoka, categoryName, dupType, original string) *DuplicateNote {
 	return &DuplicateNote{
-		Note:          models.NewNote(tournament, man, categoryName),
-		DuplicateType: dupType,
+		Note:           models.NewNote(tournament, man, categoryName),
+		DuplicateType:  dupType,
+		OriginalJudoka: original,
 	}
 }
 
@@ -69,4 +74,5 @@ func (dupNote *DuplicateNote) SaveNote(table *excelize.File, rowIndex int) {
 
 	dupNote.Note.SaveNote(table, rowIndex)
 	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), dupNote.DuplicateType)
+	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), dupNote.OriginalJudoka)
 }

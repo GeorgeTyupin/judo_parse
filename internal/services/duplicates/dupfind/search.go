@@ -20,27 +20,27 @@ func NewDuplicateFinder() *DuplicateFinder {
 	}
 }
 
-func (df *DuplicateFinder) GetDuplicateType(judoka *models.Judoka) string {
+func (df *DuplicateFinder) GetDuplicateType(judoka *models.Judoka) (string, string) {
 	if validateJudoka(judoka) {
-		return NotDuplicate
+		return NotDuplicate, ""
 	}
 
 	for _, uJudoka := range df.uniqueJudoka {
 		switch {
 		case CheckType1(judoka, uJudoka):
-			return Type1
+			return Type1, uJudoka.JUDOKA
 		case CheckType2(judoka, uJudoka):
-			return Type2
+			return Type2, uJudoka.JUDOKA
 		case CheckType3(judoka, uJudoka):
-			return Type3
+			return Type3, uJudoka.JUDOKA
 		case CheckType4(judoka, uJudoka):
-			return Type4
+			return Type4, uJudoka.JUDOKA
 		}
 	}
 
 	df.uniqueJudoka = append(df.uniqueJudoka, judoka)
 
-	return NotDuplicate
+	return NotDuplicate, ""
 }
 
 func validateJudoka(judoka *models.Judoka) bool {

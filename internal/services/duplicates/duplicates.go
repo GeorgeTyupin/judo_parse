@@ -32,11 +32,11 @@ func (ds *DuplicateService) ProcessData(data models.ExсelSheet) []*dupio.Duplic
 		for _, tournament := range sheet {
 			for categoryName, category := range tournament.WeightCategories {
 				for _, man := range category {
-					dupType := finder.GetDuplicateType(man)
+					dupType, original := finder.GetDuplicateType(man)
 					if dupType == dupfind.NotDuplicate {
 						continue
 					}
-					note := dupio.NewDuplicateNote(tournament, man, categoryName, dupType)
+					note := dupio.NewDuplicateNote(tournament, man, categoryName, dupType, original)
 
 					dupNotes = append(dupNotes, note)
 				}
