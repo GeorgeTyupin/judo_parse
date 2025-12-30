@@ -29,7 +29,7 @@ func NewReader(fileNames []string) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) Read() (map[string][][]string, error) {
+func (r *Reader) Read() (any, error) {
 	data := make(map[string][][]string)
 
 	for i, file := range r.Files {

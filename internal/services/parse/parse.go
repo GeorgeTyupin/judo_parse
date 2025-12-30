@@ -3,13 +3,14 @@ package parse
 import (
 	"strings"
 
+	"judo/internal/interfaces"
 	parseio "judo/internal/io/excel/parse"
 	parseutils "judo/internal/lib/utils/parse"
 	"judo/internal/models"
 )
 
 type ParseService struct {
-	Reader *parseio.Reader
+	Reader interfaces.Reader
 }
 
 func NewParseService(fileNames []string) (*ParseService, error) {
@@ -26,10 +27,12 @@ func NewParseService(fileNames []string) (*ParseService, error) {
 }
 
 func (ps *ParseService) ParseTournaments() (models.ExсelSheet, error) {
-	data, err := ps.Reader.Read()
+	readedData, err := ps.Reader.Read()
 	if err != nil {
 		return nil, err
 	}
+
+	data := readedData.(map[string][][]string)
 
 	result := make(models.ExсelSheet)
 
