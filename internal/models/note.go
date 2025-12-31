@@ -35,6 +35,7 @@ type Note struct {
 	COUNTRY        string
 	COUNTRY_LAST   string
 	SO             string
+	NAME_COMP      string
 }
 
 func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
@@ -74,6 +75,12 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 	// Парсим информацию о поле и возрасте
 	genderInfo := noteutils.ParseGenderInfo(tournament.Gender)
 
+	// Определяем значение Name_Comp
+	nameComp := "P" // По умолчанию P
+	if len(man.FirstName) > 2 && !strings.Contains(man.FirstName, ".") {
+		nameComp = "F"
+	}
+
 	note := Note{
 		TOURNAMENT:     tournament.Name,
 		TOUR_TYPE:      tourType,
@@ -100,6 +107,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		COUNTRY:        man.Country,
 		COUNTRY_LAST:   replacers.NormalizeCityName(man.Country),
 		SO:             man.SO,
+		NAME_COMP:      nameComp,
 	}
 
 	return &note
@@ -133,4 +141,5 @@ func (note *Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), note.COUNTRY)
 	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), note.COUNTRY_LAST)
 	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.SO)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.NAME_COMP)
 }
