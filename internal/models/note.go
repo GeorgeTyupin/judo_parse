@@ -20,6 +20,9 @@ type Note struct {
 	YEAR           string
 	MONTH          string
 	GENDER         string
+	GENDER_FULL    string
+	AGE            string
+	B_RANGE        string
 	WeightCategory string
 	WC             string
 	RANK           string
@@ -68,6 +71,9 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 	firstName := replacers.Transliterate(man.FirstName)
 	judokaRus := replacers.Transliterate(man.JUDOKA)
 
+	// Парсим информацию о поле и возрасте
+	genderInfo := noteutils.ParseGenderInfo(tournament.Gender)
+
 	note := Note{
 		TOURNAMENT:     tournament.Name,
 		TOUR_TYPE:      tourType,
@@ -78,7 +84,10 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		DATE:           tournament.Date,
 		YEAR:           year,
 		MONTH:          noteutils.FormatDate(tournament.Date),
-		GENDER:         tournament.Gender,
+		GENDER:         genderInfo.Gender,
+		GENDER_FULL:    genderInfo.GenderFull,
+		AGE:            genderInfo.Age,
+		B_RANGE:        genderInfo.BRange,
 		WeightCategory: categoryName,
 		WC:             wc,
 		RANK:           man.Rank,
@@ -109,16 +118,19 @@ func (note *Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("H%d", rowNum), note.YEAR)
 	table.SetCellValue("Sheet1", fmt.Sprintf("I%d", rowNum), note.MONTH)
 	table.SetCellValue("Sheet1", fmt.Sprintf("J%d", rowNum), note.GENDER)
-	table.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.WeightCategory)
-	table.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.WC)
-	table.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.RANK)
-	table.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.NAME)
-	table.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.FIRSTNAME)
-	table.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.JUDOKA)
-	table.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME_RUS)
-	table.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME_RUS)
-	table.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA_RUS)
-	table.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.COUNTRY)
-	table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.COUNTRY_LAST)
-	table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.SO)
+	table.SetCellValue("Sheet1", fmt.Sprintf("K%d", rowNum), note.GENDER_FULL)
+	table.SetCellValue("Sheet1", fmt.Sprintf("L%d", rowNum), note.AGE)
+	table.SetCellValue("Sheet1", fmt.Sprintf("M%d", rowNum), note.B_RANGE)
+	table.SetCellValue("Sheet1", fmt.Sprintf("N%d", rowNum), note.WeightCategory)
+	table.SetCellValue("Sheet1", fmt.Sprintf("O%d", rowNum), note.WC)
+	table.SetCellValue("Sheet1", fmt.Sprintf("P%d", rowNum), note.RANK)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Q%d", rowNum), note.NAME)
+	table.SetCellValue("Sheet1", fmt.Sprintf("R%d", rowNum), note.FIRSTNAME)
+	table.SetCellValue("Sheet1", fmt.Sprintf("S%d", rowNum), note.JUDOKA)
+	table.SetCellValue("Sheet1", fmt.Sprintf("T%d", rowNum), note.NAME_RUS)
+	table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.FIRSTNAME_RUS)
+	table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.JUDOKA_RUS)
+	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), note.COUNTRY)
+	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), note.COUNTRY_LAST)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.SO)
 }
