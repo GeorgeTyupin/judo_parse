@@ -4,15 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	app "judo/internal/app"
-
-	"github.com/joho/godotenv"
+	"judo/internal/config"
 )
-
-var createJSON = true
 
 func duplicatesCheckChoice(choice string) (bool, error) {
 	switch strings.ToLower(choice) {
@@ -48,16 +44,10 @@ func main() {
 	os.Remove("Дубли.xlsx")
 	os.Remove("USSR_tours.json")
 
-	var isDev bool
-	err := godotenv.Load("configs/.env")
-	if err != nil {
-		isDev = false
-	}
-	isDev, _ = strconv.ParseBool(os.Getenv("IS_DEV"))
-
+	cfg := config.MustLoad()
 	var choiceFile, choiceDuplicates string
 
-	if isDev {
+	if cfg.IsDev {
 		choiceFile = "1"
 		choiceDuplicates = "n"
 	} else {
@@ -77,7 +67,7 @@ func main() {
 		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
 	}
 
-	application := app.NewApp(files, isDuplicates, createJSON)
+	application := app.NewApp(cfg, files, isDuplicates)
 	if err = application.Run(); err != nil {
 		panic(err)
 	}
