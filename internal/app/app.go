@@ -1,12 +1,16 @@
 package app
 
 import (
+	"context"
 	"fmt"
 
+	"judo/internal/config"
 	dupio "judo/internal/io/excel/duplicates"
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
+	"judo/internal/io/sql"
 	"judo/internal/services/duplicates"
+	"judo/internal/services/export"
 	"judo/internal/services/parse"
 	"judo/internal/services/pivot"
 
@@ -23,14 +27,14 @@ const (
 type App struct {
 	files        []string
 	isDuplicates bool
-	createJSON   bool
+	cfg          *config.Config
 }
 
-func NewApp(files []string, isDuplicates, createJSON bool) *App {
+func NewApp(cfg *config.Config, files []string, isDuplicates bool) *App {
 	return &App{
+		cfg:          cfg,
 		files:        files,
 		isDuplicates: isDuplicates,
-		createJSON:   createJSON,
 	}
 }
 
@@ -63,7 +67,7 @@ func (app *App) Run() error {
 		pivotService.Writers[ExcelWriterKey].Write(notes)
 	}()
 
-	if app.createJSON {
+	if app.cfg.CreateJSON {
 		jsonWriter := jsonio.NewWriter("Data")
 		pivotService.RegisterWriter(JsonWriterKey, jsonWriter)
 		defer pivotService.Writers[JsonWriterKey].SaveFile()
@@ -89,6 +93,22 @@ func (app *App) Run() error {
 			duplicateService.Writers[DupWriterKey].Write(dupNotes)
 		}()
 	}
+
+	if app.cfg.IsDev {
+		repoInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		connString := app.cfg.Database.GetConnString()
+
+		pgWriter := sql.NewDBWriter(repoInitCtx, connString)
+		exportService, err := export.NewExportService(pgWriter, data)
+		if err != nil {
+			return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
+		}
+
+		dbReqCtx := context.Background()
+		exportService.ProcessTournament(dbReqCtx)
+	}
+
 	wg.Wait()
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
