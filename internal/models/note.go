@@ -75,7 +75,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		nameComp = "F"
 	}
 
-	note := Note{
+	return &Note{
 		TOURNAMENT:     tournament.Name,
 		TOUR_TYPE:      tourType,
 		TOUR_PLACE:     tourPlace,
@@ -100,8 +100,6 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		SO:             man.SO,
 		NAME_COMP:      nameComp,
 	}
-
-	return &note
 }
 
 func (note *Note) SaveNote(table *excelize.File, counter int) {
