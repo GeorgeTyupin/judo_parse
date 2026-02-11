@@ -3,14 +3,17 @@ package parse
 import (
 	"strings"
 
-	"judo/internal/interfaces"
 	parseio "judo/internal/io/excel/parse"
 	parseutils "judo/internal/lib/utils/parse"
 	"judo/internal/models"
 )
 
+type Reader interface {
+	Read() (any, error)
+}
+
 type ParseService struct {
-	Reader interfaces.Reader
+	Reader Reader
 }
 
 func NewParseService(fileNames []string) (*ParseService, error) {

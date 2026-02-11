@@ -1,7 +1,6 @@
 package duplicates
 
 import (
-	"judo/internal/interfaces"
 	"judo/internal/models"
 	"judo/internal/services/duplicates/dupfind"
 	"sort"
@@ -9,17 +8,22 @@ import (
 	dupio "judo/internal/io/excel/duplicates"
 )
 
+type Writer interface {
+	Write(data any)
+	SaveFile()
+}
+
 type DuplicateService struct {
-	Writers map[string]interfaces.Writer
+	Writers map[string]Writer
 }
 
 func NewDuplicateService() *DuplicateService {
 	return &DuplicateService{
-		Writers: make(map[string]interfaces.Writer),
+		Writers: make(map[string]Writer),
 	}
 }
 
-func (ds *DuplicateService) RegisterWriter(writerName string, writer interfaces.Writer) {
+func (ds *DuplicateService) RegisterWriter(writerName string, writer Writer) {
 	ds.Writers[writerName] = writer
 }
 

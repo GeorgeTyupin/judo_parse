@@ -1,21 +1,25 @@
 package pivot
 
 import (
-	"judo/internal/interfaces"
 	"judo/internal/models"
 )
 
+type Writer interface {
+	Write(data any)
+	SaveFile()
+}
+
 type PivotService struct {
-	Writers map[string]interfaces.Writer
+	Writers map[string]Writer
 }
 
 func NewPivotService() *PivotService {
 	return &PivotService{
-		Writers: make(map[string]interfaces.Writer),
+		Writers: make(map[string]Writer),
 	}
 }
 
-func (ps *PivotService) RegisterWriter(writerName string, writer interfaces.Writer) {
+func (ps *PivotService) RegisterWriter(writerName string, writer Writer) {
 	ps.Writers[writerName] = writer
 }
 
