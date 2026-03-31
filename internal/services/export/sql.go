@@ -10,13 +10,13 @@ type Repository interface {
 }
 
 type ExportService struct {
-	DB   Repository
+	db   Repository
 	data models.ExcelSheet
 }
 
-func NewExportService(db Repository, data models.ExcelSheet) (*ExportService, error) {
+func NewExportService(repo Repository, data models.ExcelSheet) (*ExportService, error) {
 	return &ExportService{
-		DB:   db,
+		db:   repo,
 		data: data,
 	}, nil
 }
@@ -26,7 +26,7 @@ func (es *ExportService) ProcessTournament(ctx context.Context) {
 		for _, tournament := range sheet {
 			row := models.NewTournamentDBRow(tournament)
 
-			es.DB.SaveTournament(ctx, row)
+			es.db.SaveTournament(ctx, row)
 		}
 	}
 
