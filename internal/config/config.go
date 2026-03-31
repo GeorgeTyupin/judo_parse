@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -10,6 +11,7 @@ import (
 
 type Config struct {
 	Database   DBConf
+	SSH        SSHConf
 	Version    string `env:"VERSION"`
 	CreateJSON bool   `env:"CREATE_JSON"`
 	IsDev      bool   `env:"IS_DEV"`
@@ -23,13 +25,25 @@ type DBConf struct {
 	Port     int32  `env:"DB_PORT"`
 }
 
-func MustLoad() *Config {
+type SSHConf struct {
+	Host     string `env:"SSH_HOST"`
+	User     string `env:"SSH_USER" env-default:"root"`
+	Password string `env:"SSH_PASSWORD"`
+	Port     string `env:"SSH_PORT" env-default:"22"`
+}
+
+func MustLoad() Config {
 	var cfg Config
 
-	godotenv.Load("configs/.env", "configs/database.env")
-	cleanenv.ReadEnv(&cfg)
+	if err := godotenv.Load("configs/.env", "configs/database.env"); err != nil {
+		log.Fatal("Ошибка загрузки .env файлов")
+	}
 
-	return &cfg
+	if err := cleanenv.ReadEnv(&cfg); err != nil {
+		log.Fatal("Ошибка чтения .env файлов")
+	}
+
+	return cfg
 }
 
 func (d *DBConf) GetConnString() string {
