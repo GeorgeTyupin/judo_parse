@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"judo/internal/client/ssh"
 	"judo/internal/config"
 	dupio "judo/internal/io/excel/duplicates"
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	"judo/internal/io/sql"
+	"judo/internal/repository"
 	"judo/internal/services/duplicates"
 	"judo/internal/services/export"
 	"judo/internal/services/parse"
@@ -19,16 +21,25 @@ import (
 )
 
 type App struct {
-	files        []string
-	isDuplicates bool
-	cfg          *config.Config
+	files           []string
+	isDuplicates    bool
+	isServerMigrate bool
+	isLocalMigrate  bool
+	cfg             config.Config
 }
 
-func NewApp(cfg *config.Config, files []string, isDuplicates bool) *App {
+func NewApp(cfg config.Config, files []string, isDuplicates, isServerMigrate bool) *App {
+	isLocalMigrate := false
+	if cfg.IsDev {
+		isLocalMigrate = true
+	}
+
 	return &App{
-		cfg:          cfg,
-		files:        files,
-		isDuplicates: isDuplicates,
+		cfg:             cfg,
+		files:           files,
+		isDuplicates:    isDuplicates,
+		isServerMigrate: isServerMigrate,
+		isLocalMigrate:  isLocalMigrate,
 	}
 }
 
@@ -79,19 +90,39 @@ func (app *App) Run() error {
 		}()
 	}
 
-	if app.cfg.IsDev {
-		repoInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if app.isLocalMigrate {
+		dbInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		connString := app.cfg.Database.GetConnString()
 
-		pgWriter := sql.NewDBWriter(repoInitCtx, connString)
-		exportService, err := export.NewExportService(pgWriter, data)
+		dbWriter := sql.NewDBWriter(dbInitCtx, connString)
+		defer dbWriter.Close()
+
+		pgRepo := repository.NewTournamentRepository(dbWriter)
+		exportService, err := export.NewExportService(pgRepo, data)
 		if err != nil {
 			return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
 		}
 
 		dbReqCtx := context.Background()
-		exportService.ProcessTournament(dbReqCtx)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			exportService.ProcessTournament(dbReqCtx)
+		}()
+	} else if app.isServerMigrate {
+		sshClient, err := ssh.NewSSHClient(app.cfg.SSH)
+		if err != nil {
+			return fmt.Errorf("ошибка инициализации SSHClient - %w", err)
+		}
+		defer sshClient.Close()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sshClient.MigrateOnServer()
+		}()
 	}
 
 	wg.Wait()

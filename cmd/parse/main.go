@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 	"judo/internal/config"
 )
 
-func duplicatesCheckChoice(choice string) (bool, error) {
+func yesNoChoice(choice string) (bool, error) {
 	switch strings.ToLower(choice) {
 	case "y":
 		return true, nil
@@ -45,30 +46,34 @@ func main() {
 	os.Remove("USSR_tours.json")
 
 	cfg := config.MustLoad()
-	var choiceFile, choiceDuplicates string
+	var choiceFile, choiceDuplicates, choiceMigrate string
 
 	if cfg.IsDev {
 		choiceFile = "1"
 		choiceDuplicates = "n"
+		choiceMigrate = "n"
 	} else {
 		fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
 		fmt.Scanln(&choiceFile)
 		fmt.Println("Проверять на дубли. Y/n")
 		fmt.Scanln(&choiceDuplicates)
+		fmt.Println("Мигрировать данные на сервер? Y/n")
+		fmt.Scanln(&choiceMigrate)
 	}
 
 	files, err := filesChoice(choiceFile)
 	if err != nil {
-		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
+		log.Fatalf("Ошибка: %v, попробуйте еще раз", err)
 	}
 
-	isDuplicates, err := duplicatesCheckChoice(choiceDuplicates)
+	isDuplicates, err := yesNoChoice(choiceDuplicates)
 	if err != nil {
-		panic(fmt.Sprintf("Ошибка: %v, попробуйте еще раз", err))
+		log.Fatalf("Ошибка: %v, попробуйте еще раз", err)
 	}
 
-	application := app.NewApp(cfg, files, isDuplicates)
+	isServerMigrate, err := yesNoChoice(choiceMigrate)
+	application := app.NewApp(cfg, files, isDuplicates, isServerMigrate)
 	if err = application.Run(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
