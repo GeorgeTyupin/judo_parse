@@ -1,12 +1,15 @@
 package locationsplitter
 
 import (
-	"judo/internal/interfaces"
 	lsio "judo/internal/io/excel/location_splitter"
 )
 
+type Reader interface {
+	Read() (any, error)
+}
+
 type LocationSplitter struct {
-	Reader interfaces.Reader
+	Reader Reader
 }
 
 func NewLocationSplitter() (*LocationSplitter, error) {

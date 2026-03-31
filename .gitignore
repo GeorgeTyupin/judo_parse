@@ -10,3 +10,4 @@ INT_tours.xlsx
 /bin
 .DS_STORE
 .env
+configs/database.env
