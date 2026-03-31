@@ -11,10 +11,10 @@ type Repository interface {
 
 type ExportService struct {
 	DB   Repository
-	data models.ExсelSheet
+	data models.ExcelSheet
 }
 
-func NewExportService(db Repository, data models.ExсelSheet) (*ExportService, error) {
+func NewExportService(db Repository, data models.ExcelSheet) (*ExportService, error) {
 	return &ExportService{
 		DB:   db,
 		data: data,

@@ -28,18 +28,11 @@ func NewWriter(name string) *JsonWriter {
 	return &jsonFile
 }
 
-func (w *JsonWriter) Write(data any) {
-	sheet, ok := data.(models.ExсelSheet)
-	if !ok {
-		fmt.Printf("Ошибка: ожидался тип models.ExсelSheet, получен %T\n", data)
-		return
-	}
-
+func (w *JsonWriter) Write(data models.ExcelSheet) {
 	encoder := json.NewEncoder(w.File)
 	encoder.SetIndent("", "    ")
 
-	err := encoder.Encode(&sheet)
-
+	err := encoder.Encode(&data)
 	if err != nil {
 		log.Fatalf("Ошибка записи в файл: %v", err)
 	}

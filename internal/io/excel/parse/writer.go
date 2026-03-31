@@ -40,13 +40,7 @@ func (t *ExcelWriter) SaveFile() {
 	t.File.Close()
 }
 
-func (t *ExcelWriter) Write(data any) {
-	notes, ok := data.([]*models.Note)
-	if !ok {
-		fmt.Printf("Ошибка: ожидался тип []*models.Note, получен %T\n", data)
-		return
-	}
-
+func (t *ExcelWriter) Write(notes []*models.Note) {
 	for i, note := range notes {
 		note.SaveNote(t.File, i)
 	}

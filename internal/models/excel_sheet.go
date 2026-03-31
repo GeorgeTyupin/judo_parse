@@ -1,6 +1,6 @@
 package models
 
-type ExсelSheet map[string][]*Tournament
+type ExcelSheet map[string][]*Tournament
 
 var Headers = []string{
 	"TOURNAMENT", "TOUR_TYPE", "TOUR_PLACE", "TOUR_CITY", "TOUR_COUNTRY",

@@ -43,36 +43,8 @@ func (d *ExcelWriter) SaveFile() {
 	d.File.Close()
 }
 
-func (d *ExcelWriter) Write(data any) {
-	dupNotes, ok := data.([]*DuplicateNote)
-	if !ok {
-		fmt.Printf("Ошибка: ожидался тип []*DuplicateNote, получен %T\n", data)
-		return
-	}
-
+func (d *ExcelWriter) Write(dupNotes []*models.DuplicateNote) {
 	for i, note := range dupNotes {
 		note.SaveNote(d.File, i)
 	}
-}
-
-type DuplicateNote struct {
-	Note           *models.Note
-	DuplicateType  string
-	OriginalJudoka string
-}
-
-func NewDuplicateNote(tournament *models.Tournament, man *models.Judoka, categoryName, dupType, original string) *DuplicateNote {
-	return &DuplicateNote{
-		Note:           models.NewNote(tournament, man, categoryName),
-		DuplicateType:  dupType,
-		OriginalJudoka: original,
-	}
-}
-
-func (dupNote *DuplicateNote) SaveNote(table *excelize.File, rowIndex int) {
-	rowNum := rowIndex + 2
-
-	dupNote.Note.SaveNote(table, rowIndex)
-	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), dupNote.DuplicateType)
-	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), dupNote.OriginalJudoka)
 }

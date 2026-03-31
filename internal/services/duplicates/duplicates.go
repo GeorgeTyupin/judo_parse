@@ -4,31 +4,10 @@ import (
 	"judo/internal/models"
 	"judo/internal/services/duplicates/dupfind"
 	"sort"
-
-	dupio "judo/internal/io/excel/duplicates"
 )
 
-type Writer interface {
-	Write(data any)
-	SaveFile()
-}
-
-type DuplicateService struct {
-	Writers map[string]Writer
-}
-
-func NewDuplicateService() *DuplicateService {
-	return &DuplicateService{
-		Writers: make(map[string]Writer),
-	}
-}
-
-func (ds *DuplicateService) RegisterWriter(writerName string, writer Writer) {
-	ds.Writers[writerName] = writer
-}
-
-func (ds *DuplicateService) ProcessData(data models.ExсelSheet) []*dupio.DuplicateNote {
-	dupNotes := make([]*dupio.DuplicateNote, 0)
+func ProcessData(data models.ExcelSheet) []*models.DuplicateNote {
+	dupNotes := make([]*models.DuplicateNote, 0)
 
 	finder := dupfind.NewDuplicateFinder()
 
@@ -40,8 +19,7 @@ func (ds *DuplicateService) ProcessData(data models.ExсelSheet) []*dupio.Duplic
 					if dupType == dupfind.NotDuplicate {
 						continue
 					}
-					note := dupio.NewDuplicateNote(tournament, man, categoryName, dupType, original)
-
+					note := models.NewDuplicateNote(tournament, man, categoryName, dupType, original)
 					dupNotes = append(dupNotes, note)
 				}
 			}

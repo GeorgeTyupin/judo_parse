@@ -8,12 +8,8 @@ import (
 	"judo/internal/models"
 )
 
-type Reader interface {
-	Read() (any, error)
-}
-
 type ParseService struct {
-	Reader Reader
+	reader *parseio.Reader
 }
 
 func NewParseService(fileNames []string) (*ParseService, error) {
@@ -22,22 +18,16 @@ func NewParseService(fileNames []string) (*ParseService, error) {
 		return nil, err
 	}
 
-	service := &ParseService{
-		Reader: reader,
-	}
-
-	return service, nil
+	return &ParseService{reader: reader}, nil
 }
 
-func (ps *ParseService) ParseTournaments() (models.ExсelSheet, error) {
-	readedData, err := ps.Reader.Read()
+func (ps *ParseService) ParseTournaments() (models.ExcelSheet, error) {
+	data, err := ps.reader.Read()
 	if err != nil {
 		return nil, err
 	}
 
-	data := readedData.(map[string][][]string)
-
-	result := make(models.ExсelSheet)
+	result := make(models.ExcelSheet)
 
 	//Проход по всем листам
 	for curSheet, rows := range data {
