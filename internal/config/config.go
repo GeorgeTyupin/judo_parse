@@ -35,7 +35,7 @@ type SSHConf struct {
 func MustLoad() Config {
 	var cfg Config
 
-	if err := godotenv.Load("configs/.env", "configs/database.env"); err != nil {
+	if err := godotenv.Load("configs/dev.env", "configs/prod.env"); err != nil {
 		log.Fatal("Ошибка загрузки .env файлов")
 	}
 
@@ -48,7 +48,7 @@ func MustLoad() Config {
 
 func (d *DBConf) GetConnString() string {
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s",
+		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		url.QueryEscape(d.User),
 		url.QueryEscape(d.Password),
 		d.Host,
