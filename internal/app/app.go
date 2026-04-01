@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 
 	"judo/internal/client/ssh"
 	"judo/internal/config"
@@ -10,6 +11,7 @@ import (
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	"judo/internal/io/sql"
+	"judo/internal/models"
 	"judo/internal/repository"
 	"judo/internal/services/duplicates"
 	"judo/internal/services/export"
@@ -60,73 +62,83 @@ func (app *App) Run() error {
 	excelWriter := parseio.NewWriter("Сводная таблица")
 	defer excelWriter.SaveFile()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		notes := pivot.ProcessData(data)
 		excelWriter.Write(notes)
-	}()
+	})
 
 	if app.cfg.CreateJSON {
 		jsonWriter := jsonio.NewWriter("Data")
 		defer jsonWriter.SaveFile()
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			jsonWriter.Write(data)
-		}()
+		})
 	}
 
 	if app.isDuplicates {
 		dupWriter := dupio.NewWriter("Дубли")
 		defer dupWriter.SaveFile()
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			dupNotes := duplicates.ProcessData(data)
 			dupWriter.Write(dupNotes)
-		}()
+		})
 	}
 
 	if app.isLocalMigrate {
-		dbInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		connString := app.cfg.Database.GetConnString()
+		fmt.Println("Запись в локальную БД")
 
-		dbWriter := sql.NewDBWriter(dbInitCtx, connString)
-		defer dbWriter.Close()
-
-		pgRepo := repository.NewTournamentRepository(dbWriter)
-		exportService, err := export.NewExportService(pgRepo, data)
-		if err != nil {
-			return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
+		if err := writeToDB(wg, data, nil, app.cfg); err != nil {
+			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
-
-		dbReqCtx := context.Background()
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			exportService.ProcessTournament(dbReqCtx)
-		}()
 	} else if app.isServerMigrate {
-		sshClient, err := ssh.NewSSHClient(app.cfg.SSH)
+		fmt.Println("Запись в удаленную БД")
+
+		sshClient, err := ssh.NewSSHClient(app.cfg)
 		if err != nil {
 			return fmt.Errorf("ошибка инициализации SSHClient - %w", err)
 		}
 		defer sshClient.Close()
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			sshClient.MigrateOnServer()
-		}()
+		if err := writeToDB(wg, data, sshClient.ConnectRemoteDB, app.cfg); err != nil {
+			return fmt.Errorf("ошибка записи в БД - %w", err)
+		}
 	}
 
 	wg.Wait()
 
 	fmt.Println("Выполнение заняло ", time.Since(start))
+	return nil
+}
+
+func writeToDB(
+	wg *sync.WaitGroup,
+	data models.ExcelSheet,
+	dialFunc func(ctx context.Context, network, addr string) (net.Conn, error),
+	cfg config.Config,
+) error {
+	dbInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	connString := cfg.Database.GetConnString()
+
+	dbWriter, err := sql.NewDBWriter(dbInitCtx, connString, dialFunc)
+	if err != nil {
+		return fmt.Errorf("ошибка инициализации DBWriter - %w", err)
+	}
+
+	pgRepo := repository.NewTournamentRepository(dbWriter)
+	exportService, err := export.NewExportService(pgRepo, data)
+	if err != nil {
+		dbWriter.Close()
+		return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
+	}
+
+	wg.Go(func() {
+		defer dbWriter.Close()
+		exportService.ProcessTournament(context.Background())
+	})
+
 	return nil
 }
