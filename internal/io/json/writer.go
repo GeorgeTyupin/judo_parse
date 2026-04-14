@@ -1,4 +1,4 @@
-package parseio
+package jsonio
 
 import (
 	"encoding/json"

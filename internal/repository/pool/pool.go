@@ -1,4 +1,4 @@
-package sql
+package dbpool
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewDBWriter(
+func New(
 	ctx context.Context,
 	connString string,
 	dialFunc func(ctx context.Context, network, addr string) (net.Conn, error),

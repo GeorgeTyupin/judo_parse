@@ -9,10 +9,10 @@ import (
 	"judo/internal/config"
 	dupio "judo/internal/io/excel/duplicates"
 	parseio "judo/internal/io/excel/parse"
-	jsonio "judo/internal/io/json"
-	"judo/internal/io/sql"
+	"judo/internal/io/json"
 	"judo/internal/models"
 	"judo/internal/repository"
+	dbpool "judo/internal/repository/pool"
 	"judo/internal/services/duplicates"
 	"judo/internal/services/export"
 	"judo/internal/services/parse"
@@ -123,7 +123,7 @@ func writeToDB(
 
 	connString := cfg.Database.GetConnString()
 
-	dbWriter, err := sql.NewDBWriter(dbInitCtx, connString, dialFunc)
+	dbWriter, err := dbpool.New(dbInitCtx, connString, dialFunc)
 	if err != nil {
 		return fmt.Errorf("ошибка инициализации DBWriter - %w", err)
 	}
