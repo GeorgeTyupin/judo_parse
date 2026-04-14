@@ -38,7 +38,7 @@ type Note struct {
 	NAME_COMP      string
 }
 
-func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
+func NewNote(tournament Tournament, man Judoka, categoryName string) Note {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
 	tourPlace := strings.TrimSpace(noteutils.SafeGet(descParts, 1))
@@ -68,7 +68,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		wc = strings.Join(catParts[1:], " ")
 	}
 
-	nameRus := replacers.Transliterate(man.Name)
+	nameRus := replacers.Transliterate(man.LastName)
 	firstName := replacers.Transliterate(man.FirstName)
 	judokaRus := replacers.Transliterate(man.JUDOKA)
 
@@ -81,7 +81,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		nameComp = "F"
 	}
 
-	return &Note{
+	return Note{
 		TOURNAMENT:     tournament.Name,
 		TOUR_TYPE:      tourType,
 		TOUR_PLACE:     tourPlace,
@@ -98,7 +98,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 		WeightCategory: categoryName,
 		WC:             wc,
 		RANK:           man.Rank,
-		NAME:           man.Name,
+		NAME:           man.LastName,
 		FIRSTNAME:      man.FirstName,
 		JUDOKA:         man.JUDOKA,
 		NAME_RUS:       nameRus,
@@ -111,7 +111,7 @@ func NewNote(tournament *Tournament, man *Judoka, categoryName string) *Note {
 	}
 }
 
-func (note *Note) SaveNote(table *excelize.File, counter int) {
+func (note Note) SaveNote(table *excelize.File, counter int) {
 	rowNum := counter + 2
 
 	table.SetCellValue("Sheet1", fmt.Sprintf("A%d", rowNum), note.TOURNAMENT)

@@ -43,7 +43,7 @@ func (d *ExcelWriter) SaveFile() {
 	d.File.Close()
 }
 
-func (d *ExcelWriter) Write(dupNotes []*models.DuplicateNote) {
+func (d *ExcelWriter) Write(dupNotes []models.DuplicateNote) {
 	for i, note := range dupNotes {
 		note.SaveNote(d.File, i)
 	}

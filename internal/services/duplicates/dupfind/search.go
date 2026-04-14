@@ -11,16 +11,16 @@ const (
 )
 
 type DuplicateFinder struct {
-	uniqueJudoka []*models.Judoka
+	uniqueJudoka []models.Judoka
 }
 
 func NewDuplicateFinder() *DuplicateFinder {
 	return &DuplicateFinder{
-		make([]*models.Judoka, 0),
+		make([]models.Judoka, 0),
 	}
 }
 
-func (df *DuplicateFinder) GetDuplicateType(judoka *models.Judoka) (string, string) {
+func (df *DuplicateFinder) GetDuplicateType(judoka models.Judoka) (string, string) {
 	if validateJudoka(judoka) {
 		return NotDuplicate, ""
 	}
@@ -43,8 +43,8 @@ func (df *DuplicateFinder) GetDuplicateType(judoka *models.Judoka) (string, stri
 	return NotDuplicate, ""
 }
 
-func validateJudoka(judoka *models.Judoka) bool {
+func validateJudoka(judoka models.Judoka) bool {
 	return judoka.FirstName == "" ||
-		judoka.Name == "" ||
+		judoka.LastName == "" ||
 		judoka.Country == ""
 }

@@ -46,7 +46,7 @@ func (ps *ParseService) ParseTournaments() (models.ExcelSheet, error) {
 			tournaments := createTournament(left, right, lenCurTable, rows)
 
 			if _, exists := result[curSheet]; !exists {
-				result[curSheet] = make([]*models.Tournament, 0)
+				result[curSheet] = make([]models.Tournament, 0)
 			}
 			result[curSheet] = append(result[curSheet], tournaments...)
 
@@ -57,7 +57,7 @@ func (ps *ParseService) ParseTournaments() (models.ExcelSheet, error) {
 	return result, nil
 }
 
-func readTournamentHeader(rows [][]string, i, left, right int) (*models.Tournament, int) {
+func readTournamentHeader(rows [][]string, i, left, right int) (models.Tournament, int) {
 	var tournament models.Tournament
 
 	for j := 0; j < 4; j++ {
@@ -92,14 +92,14 @@ func readTournamentHeader(rows [][]string, i, left, right int) (*models.Tourname
 		}
 	}
 
-	return &tournament, i + 3
+	return tournament, i + 3
 }
 
-func createTournament(left, right, lenCurTable int, rows [][]string) []*models.Tournament {
-	var tournaments []*models.Tournament
-	var tournament *models.Tournament
+func createTournament(left, right, lenCurTable int, rows [][]string) []models.Tournament {
+	var tournaments []models.Tournament
+	var tournament models.Tournament
 	var curWeightCategoryName string
-	WeightCategories := make(map[string][]*models.Judoka)
+	WeightCategories := make(map[string][]models.Judoka)
 	isNewTournament := false
 
 	//Проход по турниру
@@ -135,7 +135,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 			// Получаем шапку нового турнира
 			i++
 			tournament, i = readTournamentHeader(rows, i, left, right)
-			WeightCategories = make(map[string][]*models.Judoka)
+			WeightCategories = make(map[string][]models.Judoka)
 			isNewTournament = true
 			curWeightCategoryName = ""
 		} else {
@@ -144,7 +144,7 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []*models.T
 
 				if len(curRow[0]) > 2 {
 					curWeightCategoryName = curRow[0]
-					WeightCategories[curWeightCategoryName] = make([]*models.Judoka, 0)
+					WeightCategories[curWeightCategoryName] = make([]models.Judoka, 0)
 				} else {
 					athlete := models.NewJudoka(curRow, lenCurTable)
 					WeightCategories[curWeightCategoryName] = append(WeightCategories[curWeightCategoryName], athlete)

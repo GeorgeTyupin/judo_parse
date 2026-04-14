@@ -40,7 +40,7 @@ func (t *ExcelWriter) SaveFile() {
 	t.File.Close()
 }
 
-func (t *ExcelWriter) Write(notes []*models.Note) {
+func (t *ExcelWriter) Write(notes []models.Note) {
 	for i, note := range notes {
 		note.SaveNote(t.File, i)
 	}

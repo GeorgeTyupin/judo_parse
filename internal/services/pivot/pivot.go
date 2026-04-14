@@ -4,8 +4,8 @@ import (
 	"judo/internal/models"
 )
 
-func ProcessData(data models.ExcelSheet) []*models.Note {
-	notes := make([]*models.Note, 0)
+func ProcessData(data models.ExcelSheet) []models.Note {
+	notes := make([]models.Note, 0)
 
 	for _, sheet := range data {
 		for _, tournament := range sheet {

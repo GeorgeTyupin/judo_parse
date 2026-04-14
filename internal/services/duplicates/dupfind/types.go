@@ -18,12 +18,12 @@ const (
 // Логика: Совпадают фамилии (NAME), страна (COUNTRY) и первая буква имени (FIRSTNAME)
 // Критерий: Длина (количество символов) в FIRSTNAME <= 2
 // Обозначение в листе "Дубли": Name-First Name-Country
-func CheckType1(judoka, uJudoka *models.Judoka) bool {
+func CheckType1(judoka, uJudoka models.Judoka) bool {
 	if len(judoka.FirstName) > MaxShortNameLength {
 		return false
 	}
 
-	return judoka.Name == uJudoka.Name &&
+	return judoka.LastName == uJudoka.LastName &&
 		judoka.Country == uJudoka.Country &&
 		judoka.FirstName[0] == uJudoka.FirstName[0]
 }
@@ -34,12 +34,12 @@ func CheckType1(judoka, uJudoka *models.Judoka) bool {
 // Логика: Совпадают фамилии (NAME) и первая буква имени (FIRSTNAME)
 // Критерий: Длина (количество символов) в FIRSTNAME <= 2
 // Обозначение в листе "Дубли": Name-First Name
-func CheckType2(judoka, uJudoka *models.Judoka) bool {
+func CheckType2(judoka, uJudoka models.Judoka) bool {
 	if len(judoka.FirstName) > MaxShortNameLength {
 		return false
 	}
 
-	return judoka.Name == uJudoka.Name &&
+	return judoka.LastName == uJudoka.LastName &&
 		judoka.FirstName[0] == uJudoka.FirstName[0]
 }
 
@@ -49,10 +49,10 @@ func CheckType2(judoka, uJudoka *models.Judoka) bool {
 // Логика: Поиск записей с одинаковыми фамилиями (NAME), но отличающимися именами (FIRSTNAME)
 // Критерий: NAME совпадают полностью, FIRSTNAME отличаются на ~10%
 // Обозначение в листе "Дубли": Name=Name (First Name (-10%))
-func CheckType3(judoka, uJudoka *models.Judoka) bool {
+func CheckType3(judoka, uJudoka models.Judoka) bool {
 	similarity, err := edlib.StringsSimilarity(judoka.FirstName, uJudoka.FirstName, edlib.Levenshtein)
 	return err == nil &&
-		judoka.Name == uJudoka.Name &&
+		judoka.LastName == uJudoka.LastName &&
 		MinSimilarityThreshold <= similarity && similarity < MaxSimilarityThreshold
 }
 
@@ -62,8 +62,8 @@ func CheckType3(judoka, uJudoka *models.Judoka) bool {
 // Логика: Поиск записей с похожими на 90% фамилиями (NAME)
 // Критерий: Сходство фамилий >= 90%
 // Обозначение в листе "Дубли": Name (90%)
-func CheckType4(judoka, uJudoka *models.Judoka) bool {
-	similarity, err := edlib.StringsSimilarity(judoka.Name, uJudoka.Name, edlib.Levenshtein)
+func CheckType4(judoka, uJudoka models.Judoka) bool {
+	similarity, err := edlib.StringsSimilarity(judoka.LastName, uJudoka.LastName, edlib.Levenshtein)
 	return err == nil &&
 		MinSimilarityThreshold <= similarity && similarity < MaxSimilarityThreshold
 

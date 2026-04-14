@@ -6,8 +6,8 @@ import (
 	"sort"
 )
 
-func ProcessData(data models.ExcelSheet) []*models.DuplicateNote {
-	dupNotes := make([]*models.DuplicateNote, 0)
+func ProcessData(data models.ExcelSheet) []models.DuplicateNote {
+	dupNotes := make([]models.DuplicateNote, 0)
 
 	finder := dupfind.NewDuplicateFinder()
 
