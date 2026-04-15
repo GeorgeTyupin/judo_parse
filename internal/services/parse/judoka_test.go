@@ -4,13 +4,17 @@ import (
 	"testing"
 
 	judoio "judo/internal/io/excel/judoka_parse"
+	filesutils "judo/internal/lib/utils/files"
 	"judo/internal/models"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestJudokasParsing(t *testing.T) {
-	reader, err := judoio.NewReader("../../../#JUDOKA.xlsx")
+	filePath, err := filesutils.GetRootFilePath("#JUDOKA.xlsx")
+	require.NoError(t, err)
+
+	reader, err := judoio.NewReader(filePath)
 	require.NoError(t, err)
 
 	service := NewJudokaService(reader)

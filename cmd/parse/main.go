@@ -23,6 +23,7 @@ var (
 	isCreateJSON     bool
 	files            []string
 	migrationTargets []string
+	dataTargets      []string
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 				Title("Выбор исходного файла").
 				Options(
 					huh.NewOption("USSR_tours", "USSR_tours").Selected(true),
-					huh.NewOption("INT_tours", "INT_tours"),
+					huh.NewOption("INT_tours", "INT_tours").Selected(true),
 				).Value(&files),
 		),
 
@@ -53,6 +54,13 @@ func main() {
 					huh.NewOption("На сервер", migrationServer),
 					huh.NewOption("В локальную БД", migrationLocal),
 				).Value(&migrationTargets),
+
+			huh.NewMultiSelect[string]().
+				Title("Какие данные мигрировать?").
+				Options(
+					huh.NewOption("Турниры", app.DataTargetTournaments),
+					huh.NewOption("Дзюдоистов", app.DataTargetJudokas),
+				).Value(&dataTargets),
 		).WithHideFunc(func() bool {
 			return !isMigrate
 		}),
@@ -79,9 +87,9 @@ func main() {
 		}
 	}
 
-	options := app.NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON)
+	options := app.NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON, files, dataTargets)
 
-	application := app.NewApp(cfg, options, files)
+	application := app.NewApp(cfg, options)
 	if err := application.Run(); err != nil {
 		log.Fatal(err)
 	}
