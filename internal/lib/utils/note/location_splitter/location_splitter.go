@@ -5,7 +5,7 @@ import (
 )
 
 type Reader interface {
-	Read() (any, error)
+	Read() ([][]string, error)
 }
 
 type LocationSplitter struct {

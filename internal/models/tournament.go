@@ -7,10 +7,10 @@ import (
 )
 
 type Tournament struct {
-	Name             string               `json:"name"`
-	Description      string               `json:"description"`
-	Date             string               `json:"date"`
-	Gender           string               `json:"gender"`
+	Name             string              `json:"name"`
+	Description      string              `json:"description"`
+	Date             string              `json:"date"`
+	Gender           string              `json:"gender"`
 	WeightCategories map[string][]Judoka `json:"weight_categories"`
 }
 
@@ -26,7 +26,7 @@ type TournamentDBRow struct {
 	Month     int16  `db:"month"`
 }
 
-func NewTournamentDBRow(tournament Tournament) *TournamentDBRow {
+func NewTournamentDBRow(tournament Tournament) TournamentDBRow {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
 	tourPlace := strings.TrimSpace(noteutils.SafeGet(descParts, 1))
@@ -39,7 +39,7 @@ func NewTournamentDBRow(tournament Tournament) *TournamentDBRow {
 
 	monthInt, _ := strconv.Atoi(noteutils.FormatDate(tournament.Date))
 
-	return &TournamentDBRow{
+	return TournamentDBRow{
 		Name:   tournament.Name,
 		Type:   tourType,
 		Place:  tourPlace,

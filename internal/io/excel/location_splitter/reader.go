@@ -25,7 +25,7 @@ func NewReader(name string) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) Read() (any, error) {
+func (r *Reader) Read() ([][]string, error) {
 	curSheet := r.File.GetSheetList()[0]
 
 	rows, err := r.File.GetRows(curSheet)
