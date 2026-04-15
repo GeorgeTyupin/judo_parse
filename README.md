@@ -180,7 +180,7 @@ judo/
 
 ## Технический стек
 
-- **Go 1.26**
+- **Go 1.26.1**
 - **[charmbracelet/huh](https://github.com/charmbracelet/huh)** — интерактивный TUI для ввода параметров
 - **[excelize/v2](https://github.com/xuri/excelize)** — работа с Excel (XLSX)
 - **[pgx/v5](https://github.com/jackc/pgx)** — подключение и миграция данных в PostgreSQL
@@ -194,7 +194,7 @@ judo/
 ## Установка и запуск
 
 ### Требования
-- Go 1.26.1+
+- Go 1.26+
 - Excel файлы с турнирами в корне проекта
 
 ### Установка зависимостей
