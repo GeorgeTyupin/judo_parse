@@ -1,44 +1,29 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	app "judo/internal/app"
 	"judo/internal/config"
+
+	"github.com/charmbracelet/huh"
 )
 
-func yesNoChoice(choice string) (bool, error) {
-	switch strings.ToLower(choice) {
-	case "y":
-		return true, nil
-	case "n":
-		return false, nil
-	default:
-		return false, fmt.Errorf("неверный выбор %s", choice)
-	}
-}
+const (
+	migrationServer = "server"
+	migrationLocal  = "local"
+)
 
-func filesChoice(choice string) ([]string, error) {
-	files := make([]string, 0, 2)
-
-	switch choice {
-	case "1":
-		files = append(files, "USSR_tours")
-	case "2":
-		files = append(files, "INT_tours")
-	case "3":
-		files = append(files, "USSR_tours")
-		files = append(files, "INT_tours")
-	default:
-		return nil, errors.New("ошибка ввода файла")
-	}
-
-	return files, nil
-}
+var (
+	isDuplicates     bool
+	isMigrate        bool
+	isServerMigrate  bool
+	isLocalMigrate   bool
+	isCreateJSON     bool
+	files            []string
+	migrationTargets []string
+)
 
 func main() {
 	os.Remove("Сводная таблица.xlsx")
@@ -46,34 +31,58 @@ func main() {
 	os.Remove("USSR_tours.json")
 
 	cfg := config.MustLoad()
-	var choiceFile, choiceDuplicates, choiceMigrate string
 
-	if cfg.IsDev {
-		choiceFile = "1"
-		choiceDuplicates = "n"
-		choiceMigrate = "n"
-	} else {
-		fmt.Println("Выбор исходного файла. Введи:\n1, если исходный USSR_tours\n2, если исходный INT_tours\n3, если оба")
-		fmt.Scanln(&choiceFile)
-		fmt.Println("Проверять на дубли. Y/n")
-		fmt.Scanln(&choiceDuplicates)
-		fmt.Println("Мигрировать данные на сервер? Y/n")
-		fmt.Scanln(&choiceMigrate)
-	}
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewMultiSelect[string]().
+				Title("Выбор исходного файла").
+				Options(
+					huh.NewOption("USSR_tours", "USSR_tours").Selected(true),
+					huh.NewOption("INT_tours", "INT_tours"),
+				).Value(&files),
+		),
 
-	files, err := filesChoice(choiceFile)
-	if err != nil {
+		huh.NewGroup(
+			huh.NewConfirm().Title("Мигрировать данные?").Value(&isMigrate),
+		),
+
+		huh.NewGroup(
+			huh.NewMultiSelect[string]().
+				Title("Как мигрировать данные?").
+				Options(
+					huh.NewOption("На сервер", migrationServer),
+					huh.NewOption("В локальную БД", migrationLocal),
+				).Value(&migrationTargets),
+		).WithHideFunc(func() bool {
+			return !isMigrate
+		}),
+
+		huh.NewGroup(
+			huh.NewConfirm().Title("Проверять на дубли?").Value(&isDuplicates),
+		),
+
+		huh.NewGroup(
+			huh.NewConfirm().Title("Создать JSON?").Value(&isCreateJSON),
+		),
+	)
+
+	if err := form.Run(); err != nil {
 		log.Fatalf("Ошибка: %v, попробуйте еще раз", err)
 	}
 
-	isDuplicates, err := yesNoChoice(choiceDuplicates)
-	if err != nil {
-		log.Fatalf("Ошибка: %v, попробуйте еще раз", err)
+	for _, t := range migrationTargets {
+		switch t {
+		case migrationServer:
+			isServerMigrate = true
+		case migrationLocal:
+			isLocalMigrate = true
+		}
 	}
 
-	isServerMigrate, err := yesNoChoice(choiceMigrate)
-	application := app.NewApp(cfg, files, isDuplicates, isServerMigrate)
-	if err = application.Run(); err != nil {
+	options := app.NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON)
+
+	application := app.NewApp(cfg, options, files)
+	if err := application.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

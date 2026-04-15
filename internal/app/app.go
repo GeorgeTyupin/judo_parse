@@ -22,26 +22,33 @@ import (
 	"time"
 )
 
-type App struct {
-	files           []string
+type RunOptions struct {
 	isDuplicates    bool
 	isServerMigrate bool
 	isLocalMigrate  bool
-	cfg             config.Config
+	isCreateJSON    bool
 }
 
-func NewApp(cfg config.Config, files []string, isDuplicates, isServerMigrate bool) *App {
-	isLocalMigrate := false
-	if cfg.IsDev {
-		isLocalMigrate = true
-	}
-
-	return &App{
-		cfg:             cfg,
-		files:           files,
+func NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON bool) RunOptions {
+	return RunOptions{
 		isDuplicates:    isDuplicates,
 		isServerMigrate: isServerMigrate,
 		isLocalMigrate:  isLocalMigrate,
+		isCreateJSON:    isCreateJSON,
+	}
+}
+
+type App struct {
+	files []string
+	cfg   config.Config
+	opt   RunOptions
+}
+
+func NewApp(cfg config.Config, options RunOptions, files []string) *App {
+	return &App{
+		cfg:   cfg,
+		files: files,
+		opt:   options,
 	}
 }
 
@@ -67,7 +74,7 @@ func (app *App) Run() error {
 		excelWriter.Write(notes)
 	})
 
-	if app.cfg.CreateJSON {
+	if app.opt.isCreateJSON {
 		jsonWriter := jsonio.NewWriter("Data")
 		defer jsonWriter.SaveFile()
 
@@ -76,7 +83,7 @@ func (app *App) Run() error {
 		})
 	}
 
-	if app.isDuplicates {
+	if app.opt.isDuplicates {
 		dupWriter := dupio.NewWriter("Дубли")
 		defer dupWriter.SaveFile()
 
@@ -86,13 +93,13 @@ func (app *App) Run() error {
 		})
 	}
 
-	if app.isLocalMigrate {
+	if app.opt.isLocalMigrate {
 		fmt.Println("Запись в локальную БД")
 
 		if err := writeToDB(wg, tournaments, nil, app.cfg); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
-	} else if app.isServerMigrate {
+	} else if app.opt.isServerMigrate {
 		fmt.Println("Запись в удаленную БД")
 
 		sshClient, err := ssh.NewSSHClient(app.cfg)

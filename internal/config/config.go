@@ -10,11 +10,9 @@ import (
 )
 
 type Config struct {
-	Database   DBConf
-	SSH        SSHConf
-	Version    string `env:"VERSION"`
-	CreateJSON bool   `env:"CREATE_JSON"`
-	IsDev      bool   `env:"IS_DEV"`
+	Database DBConf
+	SSH      SSHConf
+	Version  string `env:"VERSION"`
 }
 
 type DBConf struct {
