@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -48,17 +49,21 @@ type JudokaDBRow struct {
 	UpdatedAt      *time.Time `db:"updated_at"`
 }
 
-func NewJudokaDBRow(judoka Judoka) *JudokaDBRow {
-	return &JudokaDBRow{
-		LastName:       judoka.LastName,
-		FirstName:      judoka.FirstName,
-		LastNameRus:    judoka.LastNameRus,
-		FirstNameRus:   judoka.FirstNameRus,
+func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
+	if len(curRow) < 4 {
+		return JudokaDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", curRow)
+	}
+
+	return JudokaDBRow{
+		LastName:       curRow[0],
+		FirstName:      curRow[1],
+		LastNameRus:    &curRow[2],
+		FirstNameRus:   &curRow[3],
 		WeightCategory: nil,
 		BirthDate:      nil,
 		BirthPlace:     nil,
 		Gender:         nil,
 		CreatedAt:      nil,
 		UpdatedAt:      nil,
-	}
+	}, nil
 }

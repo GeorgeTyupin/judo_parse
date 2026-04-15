@@ -9,7 +9,7 @@ import (
 	"judo/internal/config"
 	dupio "judo/internal/io/excel/duplicates"
 	parseio "judo/internal/io/excel/parse"
-	"judo/internal/io/json"
+	jsonio "judo/internal/io/json"
 	"judo/internal/models"
 	"judo/internal/repository"
 	dbpool "judo/internal/repository/pool"
@@ -54,7 +54,7 @@ func (app *App) Run() error {
 		return fmt.Errorf("ошибка инициализации ParseService - %w", err)
 	}
 
-	data, err := parseService.ParseTournaments()
+	tournaments, err := parseService.ParseTournaments()
 	if err != nil {
 		return fmt.Errorf("ошибка парсинга файлов - %w", err)
 	}
@@ -63,7 +63,7 @@ func (app *App) Run() error {
 	defer excelWriter.SaveFile()
 
 	wg.Go(func() {
-		notes := pivot.ProcessData(data)
+		notes := pivot.ProcessData(tournaments)
 		excelWriter.Write(notes)
 	})
 
@@ -72,7 +72,7 @@ func (app *App) Run() error {
 		defer jsonWriter.SaveFile()
 
 		wg.Go(func() {
-			jsonWriter.Write(data)
+			jsonWriter.Write(tournaments)
 		})
 	}
 
@@ -81,7 +81,7 @@ func (app *App) Run() error {
 		defer dupWriter.SaveFile()
 
 		wg.Go(func() {
-			dupNotes := duplicates.ProcessData(data)
+			dupNotes := duplicates.ProcessData(tournaments)
 			dupWriter.Write(dupNotes)
 		})
 	}
@@ -89,7 +89,7 @@ func (app *App) Run() error {
 	if app.isLocalMigrate {
 		fmt.Println("Запись в локальную БД")
 
-		if err := writeToDB(wg, data, nil, app.cfg); err != nil {
+		if err := writeToDB(wg, tournaments, nil, app.cfg); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	} else if app.isServerMigrate {
@@ -101,7 +101,7 @@ func (app *App) Run() error {
 		}
 		defer sshClient.Close()
 
-		if err := writeToDB(wg, data, sshClient.ConnectRemoteDB, app.cfg); err != nil {
+		if err := writeToDB(wg, tournaments, sshClient.ConnectRemoteDB, app.cfg); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	}
@@ -129,7 +129,7 @@ func writeToDB(
 	}
 
 	pgRepo := repository.NewTournamentRepository(dbWriter)
-	exportService, err := export.NewExportService(pgRepo, data)
+	exportService, err := export.NewExportService(pgRepo)
 	if err != nil {
 		dbWriter.Close()
 		return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
@@ -137,7 +137,7 @@ func writeToDB(
 
 	wg.Go(func() {
 		defer dbWriter.Close()
-		exportService.ProcessTournament(context.Background())
+		exportService.SaveTournaments(context.Background(), data)
 	})
 
 	return nil
