@@ -1,13 +1,18 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 )
+
+//go:embed prod.env
+var prodEnv string
 
 type Config struct {
 	Database DBConf
@@ -33,12 +38,16 @@ type SSHConf struct {
 func MustLoad() Config {
 	var cfg Config
 
-	if err := godotenv.Load("configs/dev.env", "configs/prod.env"); err != nil {
-		log.Fatal("Ошибка загрузки .env файлов")
+	envMap, err := godotenv.Unmarshal(prodEnv)
+	if err != nil {
+		log.Fatal("Ошибка чтения конфига")
+	}
+	for k, v := range envMap {
+		os.Setenv(k, v)
 	}
 
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
-		log.Fatal("Ошибка чтения .env файлов")
+		log.Fatal("Ошибка чтения конфига")
 	}
 
 	return cfg
