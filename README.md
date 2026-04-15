@@ -72,37 +72,55 @@
 ```
 judo/
 ├── cmd/parse/               # Точка входа приложения
-│   └── main.go             # CLI интерфейс, выбор файлов
+│   └── main.go             # TUI интерфейс (huh): выбор файлов, параметры, миграция
 │
 ├── internal/
 │   ├── app/                # Слой приложения
 │   │   └── app.go         # Оркестрация сервисов, управление потоками, DI
 │   │
-│   ├── interfaces/         # Общие интерфейсы
-│   │   └── writer.go      # Интерфейс Writer для всех writers
+│   ├── client/             # Внешние клиенты
+│   │   └── ssh/
+│   │       └── ssh.go     # SSH-туннель для подключения к удалённой БД
+│   │
+│   ├── config/             # Конфигурация
+│   │   └── config.go      # Загрузка prod.env (встроен через go:embed)
 │   │
 │   ├── models/             # Модели данных (Domain layer)
 │   │   ├── judoka.go      # Модель спортсмена
 │   │   ├── tournament.go  # Модель турнира
 │   │   ├── note.go        # Модель записи в сводной таблице
+│   │   ├── duplicate_note.go # Модель записи дубля
 │   │   └── excel_sheet.go # Структура листов Excel
+│   │
+│   ├── repository/         # Слой работы с PostgreSQL
+│   │   ├── pool/
+│   │   │   └── pool.go    # Пул подключений pgx (с SSH-туннелем)
+│   │   ├── judoka.go      # JudokaRepository (INSERT дзюдоистов)
+│   │   └── tournament.go  # TournamentRepository (INSERT турниров)
 │   │
 │   ├── services/           # Бизнес-логика
 │   │   ├── parse/         # Сервис парсинга Excel
-│   │   │   └── parse.go   # ParseService с Reader
+│   │   │   ├── parse.go   # ParseService — парсинг турниров
+│   │   │   └── judoka.go  # Парсинг дзюдоистов
 │   │   ├── pivot/         # Создание сводной таблицы
 │   │   │   └── pivot.go   # PivotService с DI writers
-│   │   └── duplicates/    # Поиск дублей
-│   │       ├── duplicates.go  # DuplicateService с DI writers
-│   │       └── dupfind/
-│   │           ├── search.go  # DuplicateFinder - структура поиска
-│   │           └── types.go   # CheckType1-4 - функции проверки типов
+│   │   ├── duplicates/    # Поиск дублей
+│   │   │   ├── duplicates.go  # DuplicateService с DI writers
+│   │   │   └── dupfind/
+│   │   │       ├── search.go  # DuplicateFinder — структура поиска
+│   │   │       └── types.go   # CheckType1-4 — функции проверки типов
+│   │   └── export/        # Миграция данных в PostgreSQL
+│   │       └── sql.go     # ExportService — загрузка через репозитории
 │   │
 │   ├── io/                 # Слой ввода-вывода
 │   │   ├── excel/
-│   │   │   ├── parse/     # Excel I/O для парсинга
+│   │   │   ├── parse/          # Excel I/O для парсинга турниров
 │   │   │   │   ├── reader.go   # ExcelReader (чтение файлов)
 │   │   │   │   └── writer.go   # ExcelWriter (сводная таблица)
+│   │   │   ├── judoka_parse/   # Excel I/O для парсинга дзюдоистов
+│   │   │   │   └── reader.go   # ExcelReader (чтение дзюдоистов)
+│   │   │   ├── location_splitter/ # Excel I/O для разбивки локаций
+│   │   │   │   └── reader.go   # ExcelReader (данные о локациях)
 │   │   │   └── duplicates/     # Excel I/O для дублей
 │   │   │       └── writer.go   # ExcelWriter (таблица дублей)
 │   │   └── json/
@@ -113,13 +131,14 @@ judo/
 │       │   ├── transliterate.go  # Транслитерация имён
 │       │   └── cities.go         # Нормализация городов
 │       └── utils/
+│           ├── files/
+│           │   └── path.go       # Поиск файлов по шаблону
 │           ├── note/
-│           │   └── note.go       # Утилиты для работы с записями
+│           │   ├── noteutils.go  # Утилиты для работы с записями
+│           │   └── location_splitter/
+│           │       └── location_splitter.go # Разбивка поля город/страна
 │           └── parse/
 │               └── parseutils.go # Утилиты парсинга (ReNum, IsValidDataRow)
-│
-└── configs/
-    └── .env               # Конфигурация (режим разработки)
 ```
 
 ### Взаимодействие слоёв
@@ -132,32 +151,35 @@ judo/
        ▼
 ┌──────────────────────────────────────────────────────────┐
 │                       app.go                             │
-│  • Создаёт ParseService с массивом файлов               │
+│  • Создаёт сервисы и передаёт RunOptions                │
 │  • Регистрирует Writers в сервисах через DI             │
 │  • Запускает обработку в горутинах                      │
-└──────┬───────────────────────────────────────────────────┘
-       │
-       ├─────────────────┬──────────────────┬──────────────┐
-       ▼                 ▼                  ▼              ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────┐
-│ ParseService │  │ PivotService │  │DuplicateSvc  │  │JsonWriter│
-│              │  │              │  │              │  │          │
-│ • Reader     │  │ • Writers[]  │  │ • Writers[]  │  │(опционал)│
-│ • ParseTour  │  │ • ProcessData│  │ • ProcessData│  │          │
-│   naments()  │  │ • RegisterW  │  │ • RegisterW  │  │          │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └────┬─────┘
-       │                 │                 │               │
-       │ возвращает      │ внедрённые      │ внедрённые    │
-       │ данные          │ writers:        │ writers:      │
-       │                 │                 │               │
-       ▼                 ▼                 ▼               ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────┐
-│  Reader.go   │  │ExcelWriter   │  │ExcelWriter   │  │JsonWriter│
-│              │  │(pivot)       │  │(duplicates)  │  │          │
-│• Read()      │  │• Write(any)  │  │• Write(any)  │  │• Write() │
-│• map[sheet]  │  │• SaveFile()  │  │• SaveFile()  │  │• SaveFile│
-│  [][]string  │  │              │  │              │  │  ()      │
-└──────────────┘  └──────────────┘  └──────────────┘  └──────────┘
+└──┬──────────────┬────────────────┬────────────────┬──────┘
+   │              │                │                │
+   ▼              ▼                ▼                ▼
+┌──────────┐ ┌──────────┐  ┌──────────────┐ ┌──────────────────┐
+│  Parse   │ │  Pivot   │  │  Duplicate   │ │  ExportService   │
+│ Service  │ │ Service  │  │   Service    │ │ (export/sql.go)  │
+│          │ │          │  │              │ │                  │
+│• Reader  │ │• Writers[]│  │• Writers[]  │ │• SaveTournaments │
+│• Parse   │ │• Process  │  │• Process    │ │• SaveJudokas     │
+│  Tourns  │ │• Register │  │• Register   │ │                  │
+└────┬─────┘ └─────┬────┘  └──────┬───────┘ └────────┬─────────┘
+     │             │              │                   │
+     ▼             ▼              ▼                   ▼
+┌──────────┐ ┌──────────┐  ┌──────────┐  ┌────────────────────┐
+│ Excel    │ │  Excel   │  │  Excel   │  │   Repository layer │
+│ Reader   │ │  Writer  │  │  Writer  │  │                    │
+│(parse/   │ │ (pivot)  │  │ (dupl.)  │  │• TournamentRepo    │
+│judoka_   │ │          │  │          │  │• JudokaRepo        │
+│ parse)   │ │ JsonWrtr │  │          │  └──────────┬─────────┘
+└──────────┘ └──────────┘  └──────────┘             │
+                                                     ▼
+                                          ┌──────────────────────┐
+                                          │    pool/pool.go      │
+                                          │  pgxpool + SSH-туннель│
+                                          │  (для удалённого БД) │
+                                          └──────────────────────┘
 
 Интерфейс Writer:
   type Writer interface {
