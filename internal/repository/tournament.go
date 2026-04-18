@@ -3,19 +3,21 @@ package repository
 import (
 	"context"
 	"judo/internal/models"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type TournamentRepository struct {
-	db *pgxpool.Pool
+	db     *pgxpool.Pool
+	logger *slog.Logger
 }
 
-func NewTournamentRepository(db *pgxpool.Pool) *TournamentRepository {
+func NewTournamentRepository(db *pgxpool.Pool, logger *slog.Logger) *TournamentRepository {
 	return &TournamentRepository{
-		db: db,
+		db:     db,
+		logger: logger,
 	}
 }
 
@@ -37,7 +39,7 @@ func (r *TournamentRepository) SaveTournament(ctx context.Context, tourRow model
 		tourRow.Gender,
 	)
 	if err != nil {
-		log.Printf("Ошибка сохранения турнира: %v", err)
+		r.logger.Error("Ошибка сохранения турнира", slog.String("error", err.Error()))
 	}
 }
 
@@ -62,6 +64,6 @@ func (r *TournamentRepository) SaveJudoka(ctx context.Context, judokaRow models.
 		judokaRow.UpdatedAt,
 	)
 	if err != nil {
-		log.Printf("Ошибка сохранения дзюдоиста: %v", err)
+		r.logger.Error("Ошибка сохранения дзюдоиста", slog.String("error", err.Error()))
 	}
 }

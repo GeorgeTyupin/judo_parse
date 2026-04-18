@@ -2,23 +2,25 @@ package parseio
 
 import (
 	"fmt"
-
 	"judo/internal/models"
+	"log/slog"
 
 	"github.com/xuri/excelize/v2"
 )
 
 type ExcelWriter struct {
-	Name string
-	File *excelize.File
+	Name   string
+	File   *excelize.File
+	logger *slog.Logger
 }
 
-func NewWriter(name string) *ExcelWriter {
+func NewWriter(name string, logger *slog.Logger) *ExcelWriter {
 	table := excelize.NewFile()
 
 	pTable := ExcelWriter{
-		Name: name,
-		File: table,
+		Name:   name,
+		File:   table,
+		logger: logger,
 	}
 
 	pTable.setHeader()
@@ -35,7 +37,7 @@ func (t *ExcelWriter) setHeader() {
 
 func (t *ExcelWriter) SaveFile() {
 	if err := t.File.SaveAs(fmt.Sprintf("%s.xlsx", t.Name)); err != nil {
-		fmt.Printf("Ошибка сохранения файла %s: %v\n", t.Name, err)
+		slog.Error("Ошибка сохранения файла", slog.String("name", t.Name), slog.String("error", err.Error()))
 	}
 	t.File.Close()
 }

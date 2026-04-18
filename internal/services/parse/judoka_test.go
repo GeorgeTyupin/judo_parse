@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"log/slog"
 	"testing"
 
 	judoio "judo/internal/io/excel/judoka_parse"
@@ -17,7 +18,7 @@ func TestJudokasParsing(t *testing.T) {
 	reader, err := judoio.NewReader(filePath)
 	require.NoError(t, err)
 
-	service := NewJudokaService(reader)
+	service := NewJudokaService(reader, slog.Default())
 
 	judokas, err := service.Parse()
 	require.NoError(t, err)

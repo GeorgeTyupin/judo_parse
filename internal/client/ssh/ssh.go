@@ -2,8 +2,8 @@ package ssh
 
 import (
 	"context"
-	"fmt"
 	"judo/internal/config"
+	"log/slog"
 	"net"
 
 	"golang.org/x/crypto/ssh"
@@ -28,7 +28,7 @@ func NewSSHClient(cfg config.Config) (*SSHClient, error) {
 		return nil, err
 	}
 
-	fmt.Println("SSH соединение установлено")
+	slog.Info("SSH соединение установлено")
 
 	return &SSHClient{
 		client: client,

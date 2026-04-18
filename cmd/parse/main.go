@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	app "judo/internal/app"
@@ -27,6 +27,11 @@ var (
 )
 
 func main() {
+	logger := slog.New(
+		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
+	)
+
+	logger.Info("Удаление старых файлов")
 	os.Remove("Сводная таблица.xlsx")
 	os.Remove("Дубли.xlsx")
 	os.Remove("USSR_tours.json")
@@ -75,7 +80,8 @@ func main() {
 	)
 
 	if err := form.Run(); err != nil {
-		log.Fatalf("Ошибка: %v, попробуйте еще раз", err)
+		logger.Error("Ошибка создания формы, попробуйте еще раз", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	for _, t := range migrationTargets {
@@ -89,8 +95,9 @@ func main() {
 
 	options := app.NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON, files, dataTargets)
 
-	application := app.NewApp(cfg, options)
+	application := app.NewApp(logger, cfg, options)
 	if err := application.Run(); err != nil {
-		log.Fatal(err)
+		logger.Error("Ошибка при запуске приложения", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }

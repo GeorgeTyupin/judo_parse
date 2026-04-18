@@ -2,6 +2,7 @@ package dupio
 
 import (
 	"fmt"
+	"log/slog"
 
 	"judo/internal/models"
 
@@ -9,16 +10,18 @@ import (
 )
 
 type ExcelWriter struct {
-	Name string
-	File *excelize.File
+	Name   string
+	File   *excelize.File
+	logger *slog.Logger
 }
 
-func NewWriter(name string) *ExcelWriter {
+func NewWriter(name string, logger *slog.Logger) *ExcelWriter {
 	table := excelize.NewFile()
 
 	dTable := ExcelWriter{
-		Name: name,
-		File: table,
+		Name:   name,
+		File:   table,
+		logger: logger,
 	}
 
 	dTable.setHeader()
@@ -38,7 +41,7 @@ func (d *ExcelWriter) setHeader() {
 
 func (d *ExcelWriter) SaveFile() {
 	if err := d.File.SaveAs(fmt.Sprintf("%s.xlsx", d.Name)); err != nil {
-		fmt.Printf("Ошибка сохранения файла %s: %v\n", d.Name, err)
+		slog.Error("Ошибка сохранения файла", slog.String("name", d.Name), slog.String("error", err.Error()))
 	}
 	d.File.Close()
 }

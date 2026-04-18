@@ -3,7 +3,7 @@ package config
 import (
 	_ "embed"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/url"
 	"os"
 
@@ -40,14 +40,16 @@ func MustLoad() Config {
 
 	envMap, err := godotenv.Unmarshal(prodEnv)
 	if err != nil {
-		log.Fatal("Ошибка чтения конфига")
+		slog.Error("Ошибка чтения конфига", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 	for k, v := range envMap {
 		os.Setenv(k, v)
 	}
 
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
-		log.Fatal("Ошибка чтения конфига")
+		slog.Error("Ошибка чтения конфига", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	return cfg

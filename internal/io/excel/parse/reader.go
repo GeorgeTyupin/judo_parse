@@ -2,6 +2,7 @@ package parseio
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -40,7 +41,7 @@ func (r *Reader) Read() (map[string][][]string, error) {
 				continue
 			}
 
-			fmt.Println(curSheet)
+			slog.Debug("Обработка листа", slog.String("sheet", curSheet))
 
 			rows, err := file.GetRows(curSheet)
 			if err != nil {

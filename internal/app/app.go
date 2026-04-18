@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"slices"
 
@@ -55,15 +56,17 @@ func NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON b
 }
 
 type App struct {
-	files []string
-	cfg   config.Config
-	opt   RunOptions
+	files  []string
+	cfg    config.Config
+	opt    RunOptions
+	logger *slog.Logger
 }
 
-func NewApp(cfg config.Config, options RunOptions) *App {
+func NewApp(logger *slog.Logger, cfg config.Config, options RunOptions) *App {
 	return &App{
-		cfg: cfg,
-		opt: options,
+		cfg:    cfg,
+		opt:    options,
+		logger: logger,
 	}
 }
 
@@ -81,7 +84,7 @@ func (app *App) Run() error {
 		return fmt.Errorf("ошибка парсинга файлов - %w", err)
 	}
 
-	excelWriter := parseio.NewWriter("Сводная таблица")
+	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
 
 	wg.Go(func() {
@@ -90,7 +93,7 @@ func (app *App) Run() error {
 	})
 
 	if app.opt.isCreateJSON {
-		jsonWriter := jsonio.NewWriter("Data")
+		jsonWriter := jsonio.NewWriter("Data", app.logger)
 		defer jsonWriter.SaveFile()
 
 		wg.Go(func() {
@@ -99,7 +102,7 @@ func (app *App) Run() error {
 	}
 
 	if app.opt.isDuplicates {
-		dupWriter := dupio.NewWriter("Дубли")
+		dupWriter := dupio.NewWriter("Дубли", app.logger)
 		defer dupWriter.SaveFile()
 
 		wg.Go(func() {
@@ -109,13 +112,13 @@ func (app *App) Run() error {
 	}
 
 	if app.opt.isLocalMigrate {
-		fmt.Println("Запись в локальную БД")
+		app.logger.Info("Запись в локальную БД")
 
 		if err := app.writeToDB(wg, tournaments, nil); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	} else if app.opt.isServerMigrate {
-		fmt.Println("Запись в удаленную БД")
+		app.logger.Info("Запись в удаленную БД")
 
 		sshClient, err := ssh.NewSSHClient(app.cfg)
 		if err != nil {
@@ -130,7 +133,7 @@ func (app *App) Run() error {
 
 	wg.Wait()
 
-	fmt.Println("Выполнение заняло ", time.Since(start))
+	app.logger.Info("Выполнение занято", slog.String("duration", time.Since(start).String()))
 	return nil
 }
 
@@ -149,7 +152,7 @@ func (app *App) writeToDB(
 		return fmt.Errorf("ошибка инициализации DBWriter - %w", err)
 	}
 
-	pgRepo := repository.NewTournamentRepository(dbWriter)
+	pgRepo := repository.NewTournamentRepository(dbWriter, app.logger)
 	exportService, err := export.NewExportService(pgRepo)
 	if err != nil {
 		dbWriter.Close()
@@ -172,7 +175,7 @@ func (app *App) writeToDB(
 			return fmt.Errorf("ошибка инициализации Reader - %w", err)
 		}
 
-		service := parse.NewJudokaService(reader)
+		service := parse.NewJudokaService(reader, app.logger)
 		judokas, err := service.Parse()
 		if err != nil {
 			return fmt.Errorf("ошибка парсинга файлов - %w", err)

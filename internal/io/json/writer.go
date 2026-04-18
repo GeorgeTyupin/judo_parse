@@ -3,26 +3,29 @@ package jsonio
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"judo/internal/models"
 )
 
 type JsonWriter struct {
-	Name string
-	File *os.File
+	Name   string
+	File   *os.File
+	logger *slog.Logger
 }
 
-func NewWriter(name string) *JsonWriter {
+func NewWriter(name string, logger *slog.Logger) *JsonWriter {
 	newJson, err := os.Create(fmt.Sprintf("%s.json", name))
 	if err != nil {
-		log.Fatalf("Ошибка создания файла: %v", err)
+		slog.Error("Ошибка создания файла", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	jsonFile := JsonWriter{
-		Name: name,
-		File: newJson,
+		Name:   name,
+		File:   newJson,
+		logger: logger,
 	}
 
 	return &jsonFile
@@ -34,7 +37,8 @@ func (w *JsonWriter) Write(data models.ExcelSheet) {
 
 	err := encoder.Encode(&data)
 	if err != nil {
-		log.Fatalf("Ошибка записи в файл: %v", err)
+		slog.Error("Ошибка записи в файл", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
 

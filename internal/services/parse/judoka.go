@@ -4,16 +4,18 @@ import (
 	"fmt"
 	judokaio "judo/internal/io/excel/judoka_parse"
 	"judo/internal/models"
-	"log"
+	"log/slog"
 )
 
 type JudokaService struct {
 	reader *judokaio.Reader
+	logger *slog.Logger
 }
 
-func NewJudokaService(reader *judokaio.Reader) *JudokaService {
+func NewJudokaService(reader *judokaio.Reader, logger *slog.Logger) *JudokaService {
 	return &JudokaService{
 		reader: reader,
+		logger: logger,
 	}
 }
 
@@ -27,13 +29,13 @@ func (s *JudokaService) Parse() ([]models.JudokaDBRow, error) {
 
 	for _, row := range data {
 		if len(row) < 4 {
-			log.Printf("Пропуск строки %v, длина %d\n", row, len(row))
+			slog.Debug("Пропуск строки", slog.Int("длина", len(row)))
 			continue
 		}
 
 		judoka, err := models.NewJudokaDBRow(row)
 		if err != nil {
-			log.Printf("Ошибка создания дзюдоиста: %v\n", err)
+			slog.Debug("Ошибка создания дзюдоиста", slog.String("error", err.Error()))
 			continue
 		}
 
