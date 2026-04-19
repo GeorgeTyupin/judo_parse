@@ -1,12 +1,13 @@
 package duplicates
 
 import (
+	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 	"judo/internal/services/duplicates/dupfind"
 	"sort"
 )
 
-func ProcessData(data models.ExcelSheet) []models.DuplicateNote {
+func ProcessData(data models.ExcelSheet, judokaRussifier russifiers.JudokaRussifier) []models.DuplicateNote {
 	dupNotes := make([]models.DuplicateNote, 0)
 
 	finder := dupfind.NewDuplicateFinder()
@@ -19,7 +20,13 @@ func ProcessData(data models.ExcelSheet) []models.DuplicateNote {
 					if dupType == dupfind.NotDuplicate {
 						continue
 					}
-					note := models.NewDuplicateNote(tournament, man, categoryName, dupType, original)
+					note := models.NewDuplicateNote(tournament,
+						man,
+						categoryName,
+						dupType,
+						original,
+						judokaRussifier,
+					)
 					dupNotes = append(dupNotes, note)
 				}
 			}

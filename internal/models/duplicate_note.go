@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"judo/internal/lib/utils/note/russifiers"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -12,9 +13,14 @@ type DuplicateNote struct {
 	OriginalJudoka string
 }
 
-func NewDuplicateNote(tournament Tournament, man Judoka, categoryName, dupType, original string) DuplicateNote {
+func NewDuplicateNote(tournament Tournament,
+	man Judoka,
+	categoryName,
+	dupType,
+	original string,
+	judokaRussifier russifiers.JudokaRussifier) DuplicateNote {
 	return DuplicateNote{
-		Note:           NewNote(tournament, man, categoryName),
+		Note:           NewNote(tournament, man, categoryName, judokaRussifier),
 		DuplicateType:  dupType,
 		OriginalJudoka: original,
 	}

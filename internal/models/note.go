@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"judo/internal/lib/replacers"
 	noteutils "judo/internal/lib/utils/note"
+	"judo/internal/lib/utils/note/russifiers"
 	"strings"
 
 	"github.com/xuri/excelize/v2"
@@ -38,7 +39,7 @@ type Note struct {
 	NAME_COMP      string
 }
 
-func NewNote(tournament Tournament, man Judoka, categoryName string) Note {
+func NewNote(tournament Tournament, man Judoka, categoryName string, judokaRussifier russifiers.JudokaRussifier) Note {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
 	tourPlace := strings.TrimSpace(noteutils.SafeGet(descParts, 1))
@@ -68,9 +69,13 @@ func NewNote(tournament Tournament, man Judoka, categoryName string) Note {
 		wc = strings.Join(catParts[1:], " ")
 	}
 
-	nameRus := replacers.Transliterate(man.LastName)
-	firstName := replacers.Transliterate(man.FirstName)
-	judokaRus := replacers.Transliterate(man.JUDOKA)
+	var firstNameRus, lastNameRus, judokaRus string
+
+	// Транслитерация фамилии и имени
+	nameRusSlice := judokaRussifier.Russify(man.JUDOKA)
+	firstNameRus = nameRusSlice[1]
+	lastNameRus = nameRusSlice[0]
+	judokaRus = fmt.Sprintf("%s %s", firstNameRus, lastNameRus)
 
 	// Парсим информацию о поле и возрасте
 	genderInfo := noteutils.ParseGenderInfo(tournament.Gender)
@@ -101,8 +106,8 @@ func NewNote(tournament Tournament, man Judoka, categoryName string) Note {
 		NAME:           man.LastName,
 		FIRSTNAME:      man.FirstName,
 		JUDOKA:         man.JUDOKA,
-		NAME_RUS:       nameRus,
-		FIRSTNAME_RUS:  firstName,
+		NAME_RUS:       lastNameRus,
+		FIRSTNAME_RUS:  firstNameRus,
 		JUDOKA_RUS:     judokaRus,
 		COUNTRY:        man.Country,
 		COUNTRY_LAST:   replacers.NormalizeCityName(man.Country),

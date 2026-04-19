@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"judo/internal/lib/utils/note/russifiers"
 	"strings"
 	"time"
 )
@@ -66,4 +67,18 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 		CreatedAt:      nil,
 		UpdatedAt:      nil,
 	}, nil
+}
+
+func JudokaRowsToNames(judokaDBRows []JudokaDBRow) []russifiers.JudokaName {
+	judokaNames := make([]russifiers.JudokaName, 0)
+	for _, judokaDBRow := range judokaDBRows {
+		name := russifiers.NewJudokaName(
+			judokaDBRow.FirstName,
+			judokaDBRow.LastName,
+			judokaDBRow.FirstNameRus,
+			judokaDBRow.LastNameRus,
+		)
+		judokaNames = append(judokaNames, name)
+	}
+	return judokaNames
 }

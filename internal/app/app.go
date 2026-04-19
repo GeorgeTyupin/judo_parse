@@ -14,6 +14,7 @@ import (
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	filesutils "judo/internal/lib/utils/files"
+	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 	"judo/internal/repository"
 	dbpool "judo/internal/repository/pool"
@@ -32,6 +33,47 @@ const (
 
 	JudokasFileName string = "#JUDOKA.xlsx"
 )
+
+type DataForDB struct {
+	tournaments models.ExcelSheet
+	judokas     []models.JudokaDBRow
+}
+
+func NewDataForDB(logger *slog.Logger, files []string) (DataForDB, error) {
+	data := DataForDB{}
+
+	parseService, err := parse.NewParseService(files)
+	if err != nil {
+		return data, fmt.Errorf("ошибка инициализации ParseService - %w", err)
+	}
+
+	tournaments, err := parseService.ParseTournaments()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга файлов - %w", err)
+	}
+
+	filePath, err := filesutils.GetRootFilePath(JudokasFileName)
+	if err != nil {
+		return data, err
+	}
+	reader, err := judokaio.NewReader(filePath)
+	if err != nil {
+		return data, fmt.Errorf("ошибка инициализации Reader - %w", err)
+	}
+
+	service := parse.NewJudokaService(reader, logger)
+	judokas, err := service.Parse()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга дзюдоистов - %w", err)
+	}
+
+	data = DataForDB{
+		judokas:     judokas,
+		tournaments: tournaments,
+	}
+
+	return data, nil
+}
 
 type RunOptions struct {
 	isDuplicates    bool
@@ -59,36 +101,37 @@ type App struct {
 	files  []string
 	cfg    config.Config
 	opt    RunOptions
+	data   DataForDB
 	logger *slog.Logger
 }
 
-func NewApp(logger *slog.Logger, cfg config.Config, options RunOptions) *App {
+func NewApp(logger *slog.Logger, cfg config.Config, options RunOptions) (*App, error) {
+	data, err := NewDataForDB(logger, options.files)
+	if err != nil {
+		return nil, fmt.Errorf("не удалось получить данные. Возникла ошибка %w", err)
+	}
+
 	return &App{
 		cfg:    cfg,
 		opt:    options,
 		logger: logger,
-	}
+		data:   data,
+	}, nil
 }
 
 func (app *App) Run() error {
 	wg := &sync.WaitGroup{}
 	start := time.Now()
 
-	parseService, err := parse.NewParseService(app.files)
-	if err != nil {
-		return fmt.Errorf("ошибка инициализации ParseService - %w", err)
-	}
-
-	tournaments, err := parseService.ParseTournaments()
-	if err != nil {
-		return fmt.Errorf("ошибка парсинга файлов - %w", err)
-	}
+	// Инициализация русификатора
+	judokaNames := models.JudokaRowsToNames(app.data.judokas)
+	judokaRussifier := russifiers.NewJudokaRussifier(judokaNames)
 
 	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
 
 	wg.Go(func() {
-		notes := pivot.ProcessData(tournaments)
+		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier)
 		excelWriter.Write(notes)
 	})
 
@@ -97,7 +140,7 @@ func (app *App) Run() error {
 		defer jsonWriter.SaveFile()
 
 		wg.Go(func() {
-			jsonWriter.Write(tournaments)
+			jsonWriter.Write(app.data.tournaments)
 		})
 	}
 
@@ -106,7 +149,7 @@ func (app *App) Run() error {
 		defer dupWriter.SaveFile()
 
 		wg.Go(func() {
-			dupNotes := duplicates.ProcessData(tournaments)
+			dupNotes := duplicates.ProcessData(app.data.tournaments, judokaRussifier)
 			dupWriter.Write(dupNotes)
 		})
 	}
@@ -114,7 +157,7 @@ func (app *App) Run() error {
 	if app.opt.isLocalMigrate {
 		app.logger.Info("Запись в локальную БД")
 
-		if err := app.writeToDB(wg, tournaments, nil); err != nil {
+		if err := app.writeToDB(wg, nil); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	} else if app.opt.isServerMigrate {
@@ -126,20 +169,19 @@ func (app *App) Run() error {
 		}
 		defer sshClient.Close()
 
-		if err := app.writeToDB(wg, tournaments, sshClient.ConnectRemoteDB); err != nil {
+		if err := app.writeToDB(wg, sshClient.ConnectRemoteDB); err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	}
 
 	wg.Wait()
 
-	app.logger.Info("Выполнение занято", slog.String("duration", time.Since(start).String()))
+	app.logger.Info("Выполнение заняло", slog.String("duration", time.Since(start).String()))
 	return nil
 }
 
 func (app *App) writeToDB(
 	wg *sync.WaitGroup,
-	tournaments models.ExcelSheet,
 	dialFunc func(ctx context.Context, network, addr string) (net.Conn, error),
 ) error {
 	dbInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -163,27 +205,12 @@ func (app *App) writeToDB(
 	case slices.Contains(app.opt.dataTargets, DataTargetTournaments):
 		wg.Go(func() {
 			defer dbWriter.Close()
-			exportService.SaveTournaments(context.Background(), tournaments)
+			exportService.SaveTournaments(context.Background(), app.data.tournaments)
 		})
 	case slices.Contains(app.opt.dataTargets, DataTargetJudokas):
-		filePath, err := filesutils.GetRootFilePath(JudokasFileName)
-		if err != nil {
-			return err
-		}
-		reader, err := judokaio.NewReader(filePath)
-		if err != nil {
-			return fmt.Errorf("ошибка инициализации Reader - %w", err)
-		}
-
-		service := parse.NewJudokaService(reader, app.logger)
-		judokas, err := service.Parse()
-		if err != nil {
-			return fmt.Errorf("ошибка парсинга файлов - %w", err)
-		}
-
 		wg.Go(func() {
 			defer dbWriter.Close()
-			exportService.SaveJudokas(context.Background(), judokas)
+			exportService.SaveJudokas(context.Background(), app.data.judokas)
 		})
 	}
 

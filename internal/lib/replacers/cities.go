@@ -17,6 +17,7 @@ var cityReplacer = strings.NewReplacer(
 	"Zhdanov", "Mariupol",
 	"Voroshilovgrad", "Lugansk",
 	"Gorkiy", "Nizhniy Novgorod",
+	"Kaliningrad", "Kaliningrad",
 	"Kalinin", "Tver",
 )
 

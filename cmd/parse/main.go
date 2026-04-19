@@ -95,7 +95,12 @@ func main() {
 
 	options := app.NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON, files, dataTargets)
 
-	application := app.NewApp(logger, cfg, options)
+	application, err := app.NewApp(logger, cfg, options)
+	if err != nil {
+		logger.Error("Ошибка при создании приложения", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
 	if err := application.Run(); err != nil {
 		logger.Error("Ошибка при запуске приложения", slog.String("error", err.Error()))
 		os.Exit(1)
