@@ -14,9 +14,6 @@ type Judoka struct {
 	JUDOKA    string `json:"JUDOKA"`
 	Country   string `json:"COUNTRY"`
 	SO        string `json:"SO"`
-
-	FirstNameRus *string
-	LastNameRus  *string
 }
 
 func NewJudoka(curRow []string, lenCurTable int) Judoka {

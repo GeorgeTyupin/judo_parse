@@ -2,7 +2,6 @@ package russifiers
 
 import (
 	"fmt"
-	"strings"
 )
 
 type JudokaName struct {
@@ -37,10 +36,11 @@ func NewJudokaRussifier(judokas []JudokaName) JudokaRussifier {
 	return JudokaRussifier(russifier)
 }
 
-func (j JudokaRussifier) Russify(fullName string) []string {
+func (j JudokaRussifier) Russify(firstName, lastName string) []string {
+	fullName := fmt.Sprintf("%s %s", lastName, firstName)
 	if russified, ok := j[fullName]; ok {
 		return russified
 	}
 
-	return strings.Split(fullName, " ")
+	return []string{firstName, lastName}
 }

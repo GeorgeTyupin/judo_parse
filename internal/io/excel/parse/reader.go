@@ -3,6 +3,7 @@ package parseio
 import (
 	"fmt"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -15,7 +16,11 @@ type Reader struct {
 func NewReader(fileNames []string) (*Reader, error) {
 	files := make([]*excelize.File, 0)
 	for _, name := range fileNames {
-		file, err := excelize.OpenFile(fmt.Sprintf("%s.xlsx", name))
+		filePath := name
+		if filepath.Ext(name) == "" {
+			filePath = name + ".xlsx"
+		}
+		file, err := excelize.OpenFile(filePath)
 		if err != nil {
 			return nil, fmt.Errorf("не удалось открыть исходный файл %s, возникла ошибка %w", name, err)
 		}

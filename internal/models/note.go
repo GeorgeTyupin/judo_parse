@@ -72,7 +72,7 @@ func NewNote(tournament Tournament, man Judoka, categoryName string, judokaRussi
 	var firstNameRus, lastNameRus, judokaRus string
 
 	// Транслитерация фамилии и имени
-	nameRusSlice := judokaRussifier.Russify(man.JUDOKA)
+	nameRusSlice := judokaRussifier.Russify(man.FirstName, man.LastName)
 	firstNameRus = nameRusSlice[1]
 	lastNameRus = nameRusSlice[0]
 	judokaRus = fmt.Sprintf("%s %s", firstNameRus, lastNameRus)

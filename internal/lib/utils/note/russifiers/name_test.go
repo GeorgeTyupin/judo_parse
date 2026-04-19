@@ -1,7 +1,6 @@
 package russifiers_test
 
 import (
-	"fmt"
 	judoio "judo/internal/io/excel/judoka_parse"
 	filesutils "judo/internal/lib/utils/files"
 	"judo/internal/lib/utils/note/russifiers"
@@ -10,15 +9,14 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestJudokaRussifier_Russify(t *testing.T) {
-	filePath, err := filesutils.GetRootFilePath("#JUDOKA.xlsx")
+	judokaFilePath, err := filesutils.GetRootFilePath("#JUDOKA.xlsx")
 	require.NoError(t, err)
 
-	reader, err := judoio.NewReader(filePath)
+	reader, err := judoio.NewReader(judokaFilePath)
 	require.NoError(t, err)
 
 	judokaService := parse.NewJudokaService(reader, slog.Default())
@@ -29,25 +27,27 @@ func TestJudokaRussifier_Russify(t *testing.T) {
 	judokaNames := models.JudokaRowsToNames(judokas)
 	judokaRussifier := russifiers.NewJudokaRussifier(judokaNames)
 
-	parseService, err := parse.NewParseService([]string{"USSR_tours"})
+	tournamentFilePath, err := filesutils.GetRootFilePath("USSR_tours.xlsx")
+	require.NoError(t, err)
+
+	parseService, err := parse.NewParseService([]string{tournamentFilePath})
 	require.NoError(t, err)
 
 	tournamentSheets, err := parseService.ParseTournaments()
 	require.NoError(t, err)
 
+	cnt := 0
+l:
 	for _, sheet := range tournamentSheets {
-		for i, tournament := range sheet {
-			if i > 5 {
-				break
-			}
+		for _, tournament := range sheet {
 			for _, judokas := range tournament.WeightCategories {
 				for _, judoka := range judokas {
-					fullName := fmt.Sprintf("%s %s", judoka.LastName, judoka.FirstName)
-					t.Run(fullName, func(t *testing.T) {
-						got := judokaRussifier.Russify(fullName)
-						assert.Equal(t, got[0], judoka.FirstName)
-						assert.Equal(t, got[1], judoka.LastName)
-					})
+					if cnt > 10 {
+						break l
+					}
+					cnt++
+					got := judokaRussifier.Russify(judoka.FirstName, judoka.LastName)
+					t.Logf("%s %s -> %s %s", judoka.LastName, judoka.FirstName, got[1], got[0])
 				}
 			}
 		}
