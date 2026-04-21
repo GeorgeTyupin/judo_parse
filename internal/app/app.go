@@ -194,7 +194,7 @@ func (app *App) writeToDB(
 		return fmt.Errorf("ошибка инициализации DBWriter - %w", err)
 	}
 
-	pgRepo := repository.NewTournamentRepository(dbWriter, app.logger)
+	pgRepo := repository.NewCommonRepository(dbWriter, app.logger)
 	exportService, err := export.NewExportService(pgRepo)
 	if err != nil {
 		dbWriter.Close()
