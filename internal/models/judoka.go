@@ -55,8 +55,8 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 	return JudokaDBRow{
 		LastName:       curRow[0],
 		FirstName:      curRow[1],
-		LastNameRus:    &curRow[2],
-		FirstNameRus:   &curRow[3],
+		LastNameRus:    &curRow[3],
+		FirstNameRus:   &curRow[4],
 		WeightCategory: nil,
 		BirthDate:      nil,
 		BirthPlace:     nil,
