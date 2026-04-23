@@ -31,6 +31,9 @@ const (
 	DataTargetTournaments string = "tournaments"
 	DataTargetJudokas     string = "judokas"
 
+	MigrationTargetServer string = "server"
+	MigrationTargetLocal  string = "local"
+
 	JudokasFileName string = "#JUDOKA.xlsx"
 )
 
@@ -84,13 +87,11 @@ type RunOptions struct {
 	dataTargets     []string
 }
 
-func NewRunOptions(isDuplicates, isServerMigrate, isLocalMigrate, isCreateJSON bool,
-	files []string,
-	dataTargets []string) RunOptions {
+func NewRunOptions(isDuplicates, isCreateJSON bool, files, migrationTargets, dataTargets []string) RunOptions {
 	return RunOptions{
 		isDuplicates:    isDuplicates,
-		isServerMigrate: isServerMigrate,
-		isLocalMigrate:  isLocalMigrate,
+		isServerMigrate: slices.Contains(migrationTargets, MigrationTargetServer),
+		isLocalMigrate:  slices.Contains(migrationTargets, MigrationTargetLocal),
 		isCreateJSON:    isCreateJSON,
 		files:           files,
 		dataTargets:     dataTargets,
