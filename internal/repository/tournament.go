@@ -21,24 +21,32 @@ func newTournamentRepository(db *pgxpool.Pool, logger *slog.Logger) *tournamentR
 	}
 }
 
-func (r *tournamentRepository) SaveTournament(ctx context.Context, tourRow models.TournamentDBRow) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+func (r *tournamentRepository) SaveAllTournaments(ctx context.Context, rows []models.TournamentDBRow) {
+	if err := truncateTable(ctx, r.db, "tournaments"); err != nil {
+		r.logger.Error("Ошибка очистки таблицы tournaments", slog.String("error", err.Error()))
+		return
+	}
 
 	query := `
 		INSERT INTO tournaments (name, type, place, date, year, month, gender)
 		VALUES ($1, $2, $3, $4, $5, $6, $7);`
 
-	_, err := r.db.Exec(ctx, query,
-		tourRow.Name,
-		tourRow.Type,
-		tourRow.Place,
-		tourRow.Date,
-		tourRow.Year,
-		tourRow.Month,
-		tourRow.Gender,
-	)
-	if err != nil {
-		r.logger.Error("Ошибка сохранения турнира", slog.String("error", err.Error()))
+	for _, row := range rows {
+		insCtx, insCancel := context.WithTimeout(ctx, 5*time.Second)
+
+		_, err := r.db.Exec(insCtx, query,
+			row.Name,
+			row.Type,
+			row.Place,
+			row.Date,
+			row.Year,
+			row.Month,
+			row.Gender,
+		)
+		insCancel()
+
+		if err != nil {
+			r.logger.Error("Ошибка сохранения турнира", slog.String("error", err.Error()))
+		}
 	}
 }

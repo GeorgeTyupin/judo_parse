@@ -6,8 +6,8 @@ import (
 )
 
 type Repository interface {
-	SaveTournament(context.Context, models.TournamentDBRow)
-	SaveJudoka(context.Context, models.JudokaDBRow)
+	SaveAllTournaments(context.Context, []models.TournamentDBRow)
+	SaveAllJudokas(context.Context, []models.JudokaDBRow)
 }
 
 type ExportService struct {
@@ -21,17 +21,17 @@ func NewExportService(repo Repository) (*ExportService, error) {
 }
 
 func (es *ExportService) SaveTournaments(ctx context.Context, data models.ExcelSheet) {
+	var rows []models.TournamentDBRow
+
 	for _, sheet := range data {
 		for _, tournament := range sheet {
-			row := models.NewTournamentDBRow(tournament)
-
-			es.db.SaveTournament(ctx, row)
+			rows = append(rows, models.NewTournamentDBRow(tournament))
 		}
 	}
+
+	es.db.SaveAllTournaments(ctx, rows)
 }
 
 func (es *ExportService) SaveJudokas(ctx context.Context, data []models.JudokaDBRow) {
-	for _, judoka := range data {
-		es.db.SaveJudoka(ctx, judoka)
-	}
+	es.db.SaveAllJudokas(ctx, data)
 }
