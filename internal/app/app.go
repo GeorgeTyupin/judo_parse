@@ -9,8 +9,8 @@ import (
 
 	"judo/internal/client/ssh"
 	"judo/internal/config"
+	dictio "judo/internal/io/excel/dict"
 	dupio "judo/internal/io/excel/duplicates"
-	judokaio "judo/internal/io/excel/judoka_parse"
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	filesutils "judo/internal/lib/utils/files"
@@ -59,13 +59,13 @@ func NewDataForDB(logger *slog.Logger, files []string) (DataForDB, error) {
 	if err != nil {
 		return data, err
 	}
-	reader, err := judokaio.NewReader(filePath)
+	reader, err := dictio.NewReader(filePath)
 	if err != nil {
 		return data, fmt.Errorf("ошибка инициализации Reader - %w", err)
 	}
 
-	service := parse.NewJudokaService(reader, logger)
-	judokas, err := service.Parse()
+	service := parse.NewDictService(reader, logger)
+	judokas, err := service.ParseJudokas()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга дзюдоистов - %w", err)
 	}

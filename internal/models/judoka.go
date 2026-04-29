@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Judoka — структура для парсинга данных из турнирных таблиц.
 type Judoka struct {
 	Rank      string `json:"RANK"`
 	LastName  string `json:"NAME"`
@@ -34,6 +35,9 @@ func NewJudoka(curRow []string, lenCurTable int) Judoka {
 	return athlete
 }
 
+const MinJudokaRowLen = 5
+
+// JudokaDBRow — справочная запись дзюдоиста для сохранения в БД.
 type JudokaDBRow struct {
 	LastName       string     `db:"last_name"`
 	FirstName      string     `db:"first_name"`
@@ -48,21 +52,15 @@ type JudokaDBRow struct {
 }
 
 func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
-	if len(curRow) < 4 {
+	if len(curRow) < MinJudokaRowLen {
 		return JudokaDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", curRow)
 	}
 
 	return JudokaDBRow{
-		LastName:       curRow[0],
-		FirstName:      curRow[1],
-		LastNameRus:    &curRow[2],
-		FirstNameRus:   &curRow[3],
-		WeightCategory: nil,
-		BirthDate:      nil,
-		BirthPlace:     nil,
-		Gender:         nil,
-		CreatedAt:      nil,
-		UpdatedAt:      nil,
+		LastName:     curRow[0],
+		FirstName:    curRow[1],
+		LastNameRus:  new(curRow[2]),
+		FirstNameRus: new(curRow[3]),
 	}, nil
 }
 

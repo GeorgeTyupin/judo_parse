@@ -1,7 +1,7 @@
 package russifiers_test
 
 import (
-	judoio "judo/internal/io/excel/judoka_parse"
+	dictio "judo/internal/io/excel/dict"
 	filesutils "judo/internal/lib/utils/files"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
@@ -16,12 +16,12 @@ func TestJudokaRussifier_Russify(t *testing.T) {
 	judokaFilePath, err := filesutils.GetRootFilePath("#JUDOKA.xlsx")
 	require.NoError(t, err)
 
-	reader, err := judoio.NewReader(judokaFilePath)
+	reader, err := dictio.NewReader(judokaFilePath)
 	require.NoError(t, err)
 
-	judokaService := parse.NewJudokaService(reader, slog.Default())
+	dictService := parse.NewDictService(reader, slog.Default())
 
-	judokas, err := judokaService.Parse()
+	judokas, err := dictService.ParseJudokas()
 	require.NoError(t, err)
 
 	judokaNames := models.JudokaRowsToNames(judokas)

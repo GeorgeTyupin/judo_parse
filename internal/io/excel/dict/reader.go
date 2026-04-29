@@ -1,4 +1,4 @@
-package judokaio
+package dictio
 
 import (
 	"fmt"
@@ -25,13 +25,19 @@ func NewReader(fileName string) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) Read() ([][]string, error) {
-	curSheet := r.File.GetSheetList()[0]
+func (r *Reader) Read() (map[string][][]string, error) {
+	data := make(map[string][][]string)
 
-	rows, err := r.File.GetRows(curSheet)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось прочесть строки в файле %s в листе %s, возникла ошибка %w", r.fileName, curSheet, err)
+	sheetList := r.File.GetSheetList()
+
+	for _, curSheet := range sheetList {
+		rows, err := r.File.GetRows(curSheet)
+		if err != nil {
+			return nil, fmt.Errorf("не удалось прочесть строки в файле %s в листе %s, возникла ошибка %w", r.fileName, curSheet, err)
+		}
+
+		data[curSheet] = rows[1:]
 	}
 
-	return rows[1:], nil
+	return data, nil
 }
