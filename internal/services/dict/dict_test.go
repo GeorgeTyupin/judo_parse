@@ -1,4 +1,4 @@
-package parse
+package dict
 
 import (
 	"log/slog"

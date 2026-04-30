@@ -14,10 +14,12 @@ import (
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	filesutils "judo/internal/lib/utils/files"
+	"judo/internal/lib/utils/note/colsplit"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 	"judo/internal/repository"
 	dbpool "judo/internal/repository/pool"
+	"judo/internal/services/dict"
 	"judo/internal/services/duplicates"
 	"judo/internal/services/export"
 	"judo/internal/services/parse"
@@ -34,16 +36,19 @@ const (
 	MigrationTargetServer string = "server"
 	MigrationTargetLocal  string = "local"
 
-	JudokasFileName string = "#JUDOKA.xlsx"
+	DictFileName string = "#SPRAVOCHNIK.xlsx"
 )
 
-type DataForDB struct {
+type Data struct {
 	tournaments models.ExcelSheet
 	judokas     []models.JudokaDBRow
+	cities      []models.CityDBRow
+	countries   []models.CountryDBRow
+	sportClubs  []models.SportClubDBRow
 }
 
-func NewDataForDB(logger *slog.Logger, files []string) (DataForDB, error) {
-	data := DataForDB{}
+func NewData(logger *slog.Logger, files []string) (Data, error) {
+	data := Data{}
 
 	parseService, err := parse.NewParseService(files)
 	if err != nil {
@@ -55,7 +60,7 @@ func NewDataForDB(logger *slog.Logger, files []string) (DataForDB, error) {
 		return data, fmt.Errorf("ошибка парсинга файлов - %w", err)
 	}
 
-	filePath, err := filesutils.GetRootFilePath(JudokasFileName)
+	filePath, err := filesutils.GetRootFilePath(DictFileName)
 	if err != nil {
 		return data, err
 	}
@@ -64,15 +69,33 @@ func NewDataForDB(logger *slog.Logger, files []string) (DataForDB, error) {
 		return data, fmt.Errorf("ошибка инициализации Reader - %w", err)
 	}
 
-	service := parse.NewDictService(reader, logger)
+	service := dict.NewDictService(reader, logger)
 	judokas, err := service.ParseJudokas()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга дзюдоистов - %w", err)
 	}
 
-	data = DataForDB{
+	cities, err := service.ParseCities()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга городов - %w", err)
+	}
+
+	countries, err := service.ParseCountries()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга стран - %w", err)
+	}
+
+	sportClubs, err := service.ParseSportClubs()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга спортивных клубов - %w", err)
+	}
+
+	data = Data{
 		judokas:     judokas,
 		tournaments: tournaments,
+		cities:      cities,
+		countries:   countries,
+		sportClubs:  sportClubs,
 	}
 
 	return data, nil
@@ -102,12 +125,12 @@ type App struct {
 	files  []string
 	cfg    config.Config
 	opt    RunOptions
-	data   DataForDB
+	data   Data
 	logger *slog.Logger
 }
 
 func NewApp(logger *slog.Logger, cfg config.Config, options RunOptions) (*App, error) {
-	data, err := NewDataForDB(logger, options.files)
+	data, err := NewData(logger, options.files)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось получить данные. Возникла ошибка %w", err)
 	}
@@ -131,8 +154,17 @@ func (app *App) Run() error {
 	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
 
+	columnSplitter, err := colsplit.NewColumnSplitter(
+		models.GetCountryCodes(app.data.countries),
+		models.GetCityNames(app.data.cities),
+		models.GetSportClubNames(app.data.sportClubs),
+	)
+	if err != nil {
+		return fmt.Errorf("ошибка инициализации ColumnSplitter - %w", err)
+	}
+
 	wg.Go(func() {
-		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier)
+		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter)
 		excelWriter.Write(notes)
 	})
 
@@ -150,7 +182,7 @@ func (app *App) Run() error {
 		defer dupWriter.SaveFile()
 
 		wg.Go(func() {
-			dupNotes := duplicates.ProcessData(app.data.tournaments, judokaRussifier)
+			dupNotes := duplicates.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter)
 			dupWriter.Write(dupNotes)
 		})
 	}

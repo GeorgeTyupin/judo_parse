@@ -5,6 +5,7 @@ import (
 	filesutils "judo/internal/lib/utils/files"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
+	"judo/internal/services/dict"
 	"judo/internal/services/parse"
 	"log/slog"
 	"testing"
@@ -19,7 +20,7 @@ func TestJudokaRussifier_Russify(t *testing.T) {
 	reader, err := dictio.NewReader(judokaFilePath)
 	require.NoError(t, err)
 
-	dictService := parse.NewDictService(reader, slog.Default())
+	dictService := dict.NewDictService(reader, slog.Default())
 
 	judokas, err := dictService.ParseJudokas()
 	require.NoError(t, err)
