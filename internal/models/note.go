@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"judo/internal/lib/replacers"
 	noteutils "judo/internal/lib/utils/note"
+	"judo/internal/lib/utils/note/colsplit"
 	"judo/internal/lib/utils/note/russifiers"
 	"strings"
 
@@ -34,12 +35,19 @@ type Note struct {
 	FIRSTNAME_RUS  string
 	JUDOKA_RUS     string
 	COUNTRY        string
-	COUNTRY_LAST   string
+	CITY           string
+	CITY_LAST      string
 	SO             string
 	NAME_COMP      string
 }
 
-func NewNote(tournament Tournament, man Judoka, categoryName string, judokaRussifier russifiers.JudokaRussifier) Note {
+func NewNote(
+	tournament Tournament,
+	man Judoka,
+	categoryName string,
+	judokaRussifier russifiers.JudokaRussifier,
+	columnSplitter *colsplit.ColumnSplitter,
+) Note {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
 	tourPlace := strings.TrimSpace(noteutils.SafeGet(descParts, 1))
@@ -86,6 +94,9 @@ func NewNote(tournament Tournament, man Judoka, categoryName string, judokaRussi
 		nameComp = "F"
 	}
 
+	country, city, sportClub := columnSplitter.SplitCountryAndClub(man.Country, man.SO)
+	cityLast := replacers.NormalizeCityName(city)
+
 	return Note{
 		TOURNAMENT:     tournament.Name,
 		TOUR_TYPE:      tourType,
@@ -109,9 +120,10 @@ func NewNote(tournament Tournament, man Judoka, categoryName string, judokaRussi
 		NAME_RUS:       lastNameRus,
 		FIRSTNAME_RUS:  firstNameRus,
 		JUDOKA_RUS:     judokaRus,
-		COUNTRY:        man.Country,
-		COUNTRY_LAST:   replacers.NormalizeCityName(man.Country),
-		SO:             man.SO,
+		COUNTRY:        country,
+		CITY:           city,
+		CITY_LAST:      cityLast,
+		SO:             sportClub,
 		NAME_COMP:      nameComp,
 	}
 }
@@ -142,7 +154,8 @@ func (note Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("U%d", rowNum), note.FIRSTNAME_RUS)
 	table.SetCellValue("Sheet1", fmt.Sprintf("V%d", rowNum), note.JUDOKA_RUS)
 	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), note.COUNTRY)
-	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), note.COUNTRY_LAST)
-	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.SO)
-	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.NAME_COMP)
+	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), note.CITY)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.CITY_LAST)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.SO)
+	table.SetCellValue("Sheet1", fmt.Sprintf("AA%d", rowNum), note.NAME_COMP)
 }

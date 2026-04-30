@@ -28,3 +28,13 @@ func NewCountryDBRow(row []string) (CountryDBRow, error) {
 		Name:    row[2],
 	}, nil
 }
+
+func GetCountryCodes(countries []CountryDBRow) []string {
+	countryCodes := make([]string, 0, len(countries))
+	for _, c := range countries {
+		if c.ISOCode != nil {
+			countryCodes = append(countryCodes, *c.ISOCode)
+		}
+	}
+	return countryCodes
+}

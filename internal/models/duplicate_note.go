@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"judo/internal/lib/utils/note/colsplit"
 	"judo/internal/lib/utils/note/russifiers"
 
 	"github.com/xuri/excelize/v2"
@@ -18,9 +19,10 @@ func NewDuplicateNote(tournament Tournament,
 	categoryName,
 	dupType,
 	original string,
-	judokaRussifier russifiers.JudokaRussifier) DuplicateNote {
+	judokaRussifier russifiers.JudokaRussifier,
+	columnSplitter *colsplit.ColumnSplitter) DuplicateNote {
 	return DuplicateNote{
-		Note:           NewNote(tournament, man, categoryName, judokaRussifier),
+		Note:           NewNote(tournament, man, categoryName, judokaRussifier, columnSplitter),
 		DuplicateType:  dupType,
 		OriginalJudoka: original,
 	}

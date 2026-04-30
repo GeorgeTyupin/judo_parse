@@ -31,3 +31,11 @@ func NewSportClubDBRow(row []string) (SportClubDBRow, error) {
 		NameRus: new(row[1]),
 	}, nil
 }
+
+func GetSportClubNames(sportClubs []SportClubDBRow) []string {
+	sportClubNames := make([]string, 0, len(sportClubs))
+	for _, sc := range sportClubs {
+		sportClubNames = append(sportClubNames, sc.Name)
+	}
+	return sportClubNames
+}

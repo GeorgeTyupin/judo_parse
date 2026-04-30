@@ -35,3 +35,11 @@ func NewCityDBRow(row []string) (CityDBRow, error) {
 		RepublicNameEng: row[4],
 	}, nil
 }
+
+func GetCityNames(cities []CityDBRow) []string {
+	names := make([]string, len(cities))
+	for i, city := range cities {
+		names[i] = city.Name
+	}
+	return names
+}

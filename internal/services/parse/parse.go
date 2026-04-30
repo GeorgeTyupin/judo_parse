@@ -139,7 +139,6 @@ func createTournament(left, right, lenCurTable int, rows [][]string) []models.To
 			isNewTournament = true
 			curWeightCategoryName = ""
 		} else {
-			// fmt.Println(curRow[0])
 			if parseutils.ReNum.MatchString(curRow[0]) || strings.Contains(curRow[0], "Open") {
 
 				if len(curRow[0]) > 2 {
