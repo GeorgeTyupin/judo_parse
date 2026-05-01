@@ -26,10 +26,10 @@ func NewJudoka(curRow []string, lenCurTable int) Judoka {
 	}
 
 	if lenCurTable > 5 {
-		athlete.SO = strings.Trim(curRow[4], `'`)
-		athlete.Country = curRow[5]
+		athlete.SO = strings.Trim(curRow[4], `'"`)
+		athlete.Country = strings.Trim(curRow[5], `'"`)
 	} else if lenCurTable > 4 {
-		athlete.Country = curRow[4]
+		athlete.Country = strings.Trim(curRow[4], `'"`)
 	}
 
 	return athlete
@@ -59,8 +59,8 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 	return JudokaDBRow{
 		LastName:     curRow[0],
 		FirstName:    curRow[1],
-		LastNameRus:  new(curRow[2]),
-		FirstNameRus: new(curRow[3]),
+		LastNameRus:  new(curRow[3]),
+		FirstNameRus: new(curRow[4]),
 	}, nil
 }
 
