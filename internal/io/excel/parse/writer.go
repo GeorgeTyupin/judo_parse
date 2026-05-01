@@ -30,8 +30,8 @@ func NewWriter(name string, logger *slog.Logger) *ExcelWriter {
 
 func (t *ExcelWriter) setHeader() {
 	for i, header := range models.Headers {
-		cell := fmt.Sprintf("%c1", 'A'+i)
-		t.File.SetCellValue("Sheet1", cell, header)
+		col, _ := excelize.ColumnNumberToName(i + 1)
+		t.File.SetCellValue("Sheet1", col+"1", header)
 	}
 }
 
