@@ -14,7 +14,7 @@ import (
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	filesutils "judo/internal/lib/utils/files"
-	"judo/internal/lib/utils/note/colsplit"
+	"judo/internal/lib/utils/note/locresolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 	"judo/internal/repository"
@@ -154,13 +154,13 @@ func (app *App) Run() error {
 	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
 
-	columnSplitter, err := colsplit.NewColumnSplitter(
+	columnSplitter, err := locresolver.NewLocationResolver(
 		models.GetCountryCodes(app.data.countries),
-		models.GetCityNames(app.data.cities),
+		models.ToCityInput(app.data.cities),
 		models.GetSportClubNames(app.data.sportClubs),
 	)
 	if err != nil {
-		return fmt.Errorf("ошибка инициализации ColumnSplitter - %w", err)
+		return fmt.Errorf("ошибка инициализации LocationResolver - %w", err)
 	}
 
 	wg.Go(func() {

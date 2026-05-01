@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"judo/internal/lib/utils/note/locresolver"
 	"time"
 )
 
@@ -36,10 +37,13 @@ func NewCityDBRow(row []string) (CityDBRow, error) {
 	}, nil
 }
 
-func GetCityNames(cities []CityDBRow) []string {
-	names := make([]string, len(cities))
+func ToCityInput(cities []CityDBRow) []locresolver.CityInput {
+	names := make([]locresolver.CityInput, len(cities))
 	for i, city := range cities {
-		names[i] = city.Name
+		names[i] = locresolver.CityInput{
+			City:     city.Name,
+			Republic: city.RepublicNameEng,
+		}
 	}
 	return names
 }

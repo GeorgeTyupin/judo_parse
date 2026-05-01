@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"judo/internal/lib/replacers"
 	noteutils "judo/internal/lib/utils/note"
-	"judo/internal/lib/utils/note/colsplit"
+	"judo/internal/lib/utils/note/locresolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"strings"
 
@@ -37,6 +37,7 @@ type Note struct {
 	COUNTRY        string
 	CITY           string
 	CITY_LAST      string
+	REPUBLIC_ENG   string
 	SO             string
 	NAME_COMP      string
 }
@@ -46,7 +47,7 @@ func NewNote(
 	man Judoka,
 	categoryName string,
 	judokaRussifier russifiers.JudokaRussifier,
-	columnSplitter *colsplit.ColumnSplitter,
+	locationResolver *locresolver.LocationResolver,
 ) Note {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
@@ -94,8 +95,9 @@ func NewNote(
 		nameComp = "F"
 	}
 
-	country, city, sportClub := columnSplitter.SplitCountryAndClub(man.Country, man.SO)
+	country, city, sportClub := locationResolver.SplitCountryAndClub(man.Country, man.SO)
 	cityLast := replacers.NormalizeCityName(city)
+	republic := locationResolver.GetRepublicByCity(city)
 
 	return Note{
 		TOURNAMENT:     tournament.Name,
@@ -123,6 +125,7 @@ func NewNote(
 		COUNTRY:        country,
 		CITY:           city,
 		CITY_LAST:      cityLast,
+		REPUBLIC_ENG:   republic,
 		SO:             sportClub,
 		NAME_COMP:      nameComp,
 	}
@@ -156,6 +159,7 @@ func (note Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("W%d", rowNum), note.COUNTRY)
 	table.SetCellValue("Sheet1", fmt.Sprintf("X%d", rowNum), note.CITY)
 	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.CITY_LAST)
-	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.SO)
-	table.SetCellValue("Sheet1", fmt.Sprintf("AA%d", rowNum), note.NAME_COMP)
+	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.REPUBLIC_ENG)
+	table.SetCellValue("Sheet1", fmt.Sprintf("AA%d", rowNum), note.SO)
+	table.SetCellValue("Sheet1", fmt.Sprintf("AB%d", rowNum), note.NAME_COMP)
 }

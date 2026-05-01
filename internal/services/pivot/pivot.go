@@ -1,7 +1,7 @@
 package pivot
 
 import (
-	"judo/internal/lib/utils/note/colsplit"
+	"judo/internal/lib/utils/note/locresolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 )
@@ -9,7 +9,7 @@ import (
 func ProcessData(
 	data models.ExcelSheet,
 	judokaRussifier russifiers.JudokaRussifier,
-	columnSplitter *colsplit.ColumnSplitter,
+	columnSplitter *locresolver.LocationResolver,
 ) []models.Note {
 	notes := make([]models.Note, 0)
 
