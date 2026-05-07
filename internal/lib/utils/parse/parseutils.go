@@ -47,5 +47,5 @@ func IsValidDataRow(curRow []string) bool {
 	if len(curRow) == 0 {
 		return false
 	}
-	return re.MatchString(curRow[0]) && !(ReNum.MatchString(curRow[0]) && len(curRow[0]) <= 2 && !re.MatchString(curRow[1]))
+	return re.MatchString(curRow[0]) && (!ReNum.MatchString(curRow[0]) || len(curRow[0]) > 2 || re.MatchString(curRow[1]))
 }

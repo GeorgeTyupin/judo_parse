@@ -122,7 +122,6 @@ func NewRunOptions(isDuplicates, isCreateJSON bool, files, migrationTargets, dat
 }
 
 type App struct {
-	files  []string
 	cfg    config.Config
 	opt    RunOptions
 	data   Data

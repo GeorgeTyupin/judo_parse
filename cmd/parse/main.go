@@ -15,9 +15,9 @@ func main() {
 	)
 
 	logger.Info("Удаление старых файлов")
-	os.Remove("Сводная таблица.xlsx")
-	os.Remove("Дубли.xlsx")
-	os.Remove("USSR_tours.json")
+	_ = os.Remove("Сводная таблица.xlsx")
+	_ = os.Remove("Дубли.xlsx")
+	_ = os.Remove("USSR_tours.json")
 
 	cfg := config.MustLoad()
 
