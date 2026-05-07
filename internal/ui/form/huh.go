@@ -50,6 +50,9 @@ func Run() (app.RunOptions, error) {
 				Options(
 					huh.NewOption("Турниры", app.DataTargetTournaments),
 					huh.NewOption("Дзюдоистов", app.DataTargetJudokas),
+					huh.NewOption("Спортивные общества", app.DataTargetSportClubs),
+					huh.NewOption("Города", app.DataTargetCities),
+					huh.NewOption("Страны", app.DataTargetCountries),
 				).Value(&dataTargets),
 		).WithHideFunc(func() bool {
 			return !isMigrate

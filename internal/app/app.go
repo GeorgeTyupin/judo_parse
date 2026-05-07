@@ -32,6 +32,9 @@ import (
 const (
 	DataTargetTournaments string = "tournaments"
 	DataTargetJudokas     string = "judokas"
+	DataTargetCities      string = "cities"
+	DataTargetCountries   string = "countries"
+	DataTargetSportClubs  string = "sportclubs"
 
 	MigrationTargetServer string = "server"
 	MigrationTargetLocal  string = "local"
@@ -189,10 +192,16 @@ func (app *App) Run() error {
 	if app.opt.isLocalMigrate {
 		app.logger.Info("Запись в локальную БД")
 
-		if err := app.writeToDB(wg, nil); err != nil {
+		var err error
+		wg.Go(func() {
+			err = app.writeToDB(nil)
+		})
+		if err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
-	} else if app.opt.isServerMigrate {
+	}
+
+	if app.opt.isServerMigrate {
 		app.logger.Info("Запись в удаленную БД")
 
 		sshClient, err := ssh.NewSSHClient(app.cfg)
@@ -201,7 +210,11 @@ func (app *App) Run() error {
 		}
 		defer sshClient.Close()
 
-		if err := app.writeToDB(wg, sshClient.ConnectRemoteDB); err != nil {
+		wg.Go(func() {
+			err = app.writeToDB(sshClient.ConnectRemoteDB)
+		})
+
+		if err != nil {
 			return fmt.Errorf("ошибка записи в БД - %w", err)
 		}
 	}
@@ -213,7 +226,6 @@ func (app *App) Run() error {
 }
 
 func (app *App) writeToDB(
-	wg *sync.WaitGroup,
 	dialFunc func(ctx context.Context, network, addr string) (net.Conn, error),
 ) error {
 	dbInitCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -233,18 +245,36 @@ func (app *App) writeToDB(
 		return fmt.Errorf("возникла ошибка при создании сервиса для экспорта данных: %w", err)
 	}
 
-	switch {
-	case slices.Contains(app.opt.dataTargets, DataTargetTournaments):
-		wg.Go(func() {
-			defer dbWriter.Close()
+	dbWg := sync.WaitGroup{}
+
+	if slices.Contains(app.opt.dataTargets, DataTargetTournaments) {
+		dbWg.Go(func() {
 			exportService.SaveTournaments(context.Background(), app.data.tournaments)
 		})
-	case slices.Contains(app.opt.dataTargets, DataTargetJudokas):
-		wg.Go(func() {
-			defer dbWriter.Close()
+	}
+	if slices.Contains(app.opt.dataTargets, DataTargetJudokas) {
+		dbWg.Go(func() {
 			exportService.SaveJudokas(context.Background(), app.data.judokas)
 		})
 	}
+	if slices.Contains(app.opt.dataTargets, DataTargetCities) {
+		dbWg.Go(func() {
+			exportService.SaveCities(context.Background(), app.data.cities)
+		})
+	}
+	if slices.Contains(app.opt.dataTargets, DataTargetCountries) {
+		dbWg.Go(func() {
+			exportService.SaveCountries(context.Background(), app.data.countries)
+		})
+	}
+	if slices.Contains(app.opt.dataTargets, DataTargetSportClubs) {
+		dbWg.Go(func() {
+			exportService.SaveSportClubs(context.Background(), app.data.sportClubs)
+		})
+	}
+
+	dbWg.Wait()
+	dbWriter.Close()
 
 	return nil
 }

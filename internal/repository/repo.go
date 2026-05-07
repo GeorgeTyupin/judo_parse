@@ -20,14 +20,17 @@ func truncateTable(ctx context.Context, db *pgxpool.Pool, table string) error {
 type CommonRepository struct {
 	*tournamentRepository
 	*judokaRepository
+	*cityRepository
+	*countryRepository
+	*sportClubRepository
 }
 
 func NewCommonRepository(pool *pgxpool.Pool, logger *slog.Logger) *CommonRepository {
-	tournamentRepository := newTournamentRepository(pool, logger)
-	judokaRepository := newJudokaRepository(pool, logger)
-
 	return &CommonRepository{
-		tournamentRepository: tournamentRepository,
-		judokaRepository:     judokaRepository,
+		tournamentRepository: newTournamentRepository(pool, logger),
+		judokaRepository:     newJudokaRepository(pool, logger),
+		cityRepository:       newCityRepository(pool, logger),
+		countryRepository:    newCountryRepository(pool, logger),
+		sportClubRepository:  newSportClubRepository(pool, logger),
 	}
 }

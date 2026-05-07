@@ -8,6 +8,9 @@ import (
 type Repository interface {
 	SaveAllTournaments(context.Context, []models.TournamentDBRow)
 	SaveAllJudokas(context.Context, []models.JudokaDBRow)
+	SaveAllCities(context.Context, []models.CityDBRow)
+	SaveAllCountries(context.Context, []models.CountryDBRow)
+	SaveAllSportClubs(context.Context, []models.SportClubDBRow)
 }
 
 type ExportService struct {
@@ -34,4 +37,16 @@ func (es *ExportService) SaveTournaments(ctx context.Context, data models.ExcelS
 
 func (es *ExportService) SaveJudokas(ctx context.Context, data []models.JudokaDBRow) {
 	es.db.SaveAllJudokas(ctx, data)
+}
+
+func (es *ExportService) SaveCities(ctx context.Context, data []models.CityDBRow) {
+	es.db.SaveAllCities(ctx, data)
+}
+
+func (es *ExportService) SaveCountries(ctx context.Context, data []models.CountryDBRow) {
+	es.db.SaveAllCountries(ctx, data)
+}
+
+func (es *ExportService) SaveSportClubs(ctx context.Context, data []models.SportClubDBRow) {
+	es.db.SaveAllSportClubs(ctx, data)
 }
