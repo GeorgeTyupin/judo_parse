@@ -19,6 +19,9 @@ jobs:
           go-version-file: go.mod
           cache: false
 
+      - name: Create stub prod.env
+        run: touch internal/config/prod.env
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v7
 
