@@ -42,11 +42,11 @@ func FormatDate(date string) string {
 	}
 
 	result = strings.TrimFunc(result, func(r rune) bool {
-		return !((r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z'))
+		return (r < 'A' || r > 'Z') && (r < 'a' || r > 'z')
 	})
 
 	for month, num := range monthMap {
-		result = strings.Replace(result, month, num, -1)
+		result = strings.ReplaceAll(result, month, num)
 	}
 	return result
 }
@@ -89,16 +89,17 @@ func ParseGenderInfo(genderStr string) GenderInfo {
 	// Определяем Age
 	if len(parts) > 0 {
 		firstPart := parts[0]
-		if firstPart == "Senior" || firstPart == "Seniors" {
+		switch firstPart {
+		case "Senior", "Seniors":
 			info.Age = "Senior"
 			if info.BRange == "" {
 				info.BRange = "Senior"
 			}
-		} else if firstPart == "Junior" || firstPart == "Juniors" {
+		case "Junior", "Juniors":
 			info.Age = "Junior"
-		} else if firstPart == "Cadet" || firstPart == "Cadets" {
+		case "Cadet", "Cadets":
 			info.Age = "Cadets"
-		} else if firstPart == "Women" {
+		case "Women":
 			info.Age = "Women"
 		}
 	}
