@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"judo/internal/lib/utils/note/russifiers"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,10 +36,11 @@ func NewJudoka(curRow []string, lenCurTable int) Judoka {
 	return athlete
 }
 
-const MinJudokaRowLen = 5
+const MinJudokaRowLen = 6
 
 // JudokaDBRow — справочная запись дзюдоиста для сохранения в БД.
 type JudokaDBRow struct {
+	ExternalID     int64      `db:"external_id"`
 	LastName       string     `db:"last_name"`
 	FirstName      string     `db:"first_name"`
 	LastNameRus    *string    `db:"last_name_rus"`
@@ -56,11 +58,17 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 		return JudokaDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", curRow)
 	}
 
+	extID, err := strconv.ParseInt(curRow[0], 10, 64)
+	if err != nil {
+		return JudokaDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", curRow[0], err)
+	}
+
 	return JudokaDBRow{
-		LastName:     curRow[0],
-		FirstName:    curRow[1],
-		LastNameRus:  new(curRow[3]),
-		FirstNameRus: new(curRow[4]),
+		ExternalID:   extID,
+		LastName:     curRow[1],
+		FirstName:    curRow[2],
+		LastNameRus:  new(curRow[4]),
+		FirstNameRus: new(curRow[5]),
 	}, nil
 }
 

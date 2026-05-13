@@ -2,13 +2,15 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
-const MinCountryRowLen int = 3
+const MinCountryRowLen int = 4
 
 // CountryDBRow — справочная запись страны для сохранения в БД.
 type CountryDBRow struct {
+	ExternalID  int64      `db:"external_id"`
 	Name        string     `db:"name"`
 	ISOCode     *string    `db:"iso_code"`
 	NameRus     *string    `db:"name_rus"`
@@ -22,10 +24,16 @@ func NewCountryDBRow(row []string) (CountryDBRow, error) {
 		return CountryDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", row)
 	}
 
+	extID, err := strconv.ParseInt(row[0], 10, 64)
+	if err != nil {
+		return CountryDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", row[0], err)
+	}
+
 	return CountryDBRow{
-		ISOCode: new(row[0]),
-		NameRus: new(row[1]),
-		Name:    row[2],
+		ExternalID: extID,
+		ISOCode:    new(row[1]),
+		NameRus:    new(row[2]),
+		Name:       row[3],
 	}, nil
 }
 

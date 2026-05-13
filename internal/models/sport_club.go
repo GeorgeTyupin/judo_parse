@@ -2,13 +2,15 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
-const MinSportClubRowLen int = 2
+const MinSportClubRowLen int = 3
 
 // SportClubDBRow — справочная запись спортивного клуба для сохранения в БД.
 type SportClubDBRow struct {
+	ExternalID  int64      `db:"external_id"`
 	Name        string     `db:"name"`
 	NameRus     *string    `db:"name_rus"`
 	FullName    *string    `db:"full_name"`
@@ -26,9 +28,15 @@ func NewSportClubDBRow(row []string) (SportClubDBRow, error) {
 		return SportClubDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", row)
 	}
 
+	extID, err := strconv.ParseInt(row[0], 10, 64)
+	if err != nil {
+		return SportClubDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", row[0], err)
+	}
+
 	return SportClubDBRow{
-		Name:    row[0],
-		NameRus: new(row[1]),
+		ExternalID: extID,
+		Name:       row[1],
+		NameRus:    new(row[2]),
 	}, nil
 }
 
