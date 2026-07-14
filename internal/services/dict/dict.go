@@ -50,13 +50,13 @@ func (s *DictService) ParseJudokas() ([]models.JudokaDBRow, error) {
 
 	for _, row := range s.data[judokaSheetKey] {
 		if len(row) < models.MinJudokaRowLen {
-			slog.Debug("Пропуск строки", slog.Int("длина", len(row)))
+			slog.Warn("Пропуск строки", slog.Int("длина", len(row)))
 			continue
 		}
 
 		judoka, err := models.NewJudokaDBRow(row)
 		if err != nil {
-			slog.Debug("Ошибка создания дзюдоиста", slog.String("error", err.Error()))
+			slog.Warn("Ошибка создания дзюдоиста", slog.String("error", err.Error()))
 			continue
 		}
 
@@ -71,13 +71,13 @@ func (s *DictService) ParseCities() ([]models.CityDBRow, error) {
 
 	for _, row := range s.data[citySheetKey] {
 		if len(row) < models.MinCityRowLen {
-			slog.Debug("Пропуск строки", slog.Int("длина", len(row)))
+			slog.Warn("Пропуск строки", slog.Int("длина", len(row)))
 			continue
 		}
 
 		city, err := models.NewCityDBRow(row)
 		if err != nil {
-			slog.Debug("Ошибка создания города", slog.String("error", err.Error()))
+			slog.Warn("Ошибка создания города", slog.String("error", err.Error()))
 			continue
 		}
 
@@ -92,13 +92,13 @@ func (s *DictService) ParseCountries() ([]models.CountryDBRow, error) {
 
 	for _, row := range s.data[countrySheetKey] {
 		if len(row) < models.MinCountryRowLen {
-			slog.Debug("Пропуск строки", slog.Int("длина", len(row)))
+			slog.Warn("Пропуск строки", slog.Int("длина", len(row)))
 			continue
 		}
 
 		country, err := models.NewCountryDBRow(row)
 		if err != nil {
-			slog.Debug("Ошибка создания страны", slog.String("error", err.Error()))
+			slog.Warn("Ошибка создания страны", slog.String("error", err.Error()))
 			continue
 		}
 
@@ -113,13 +113,13 @@ func (s *DictService) ParseSportClubs() ([]models.SportClubDBRow, error) {
 
 	for _, row := range s.data[sportClubSheetKey] {
 		if len(row) < models.MinSportClubRowLen {
-			slog.Debug("Пропуск строки", slog.Int("длина", len(row)))
+			slog.Warn("Пропуск строки", slog.Int("длина", len(row)))
 			continue
 		}
 
 		sportClub, err := models.NewSportClubDBRow(row)
 		if err != nil {
-			slog.Debug("Ошибка создания спортивного клуба", slog.String("error", err.Error()))
+			slog.Warn("Ошибка создания спортивного клуба", slog.String("error", err.Error()))
 			continue
 		}
 
