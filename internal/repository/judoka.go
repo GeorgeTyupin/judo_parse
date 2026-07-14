@@ -28,13 +28,14 @@ func (r *judokaRepository) SaveAllJudokas(ctx context.Context, rows []models.Jud
 	}
 
 	query := `
-		INSERT INTO judokas (last_name, first_name, last_name_rus, first_name_rus, weight_category, birth_date, birth_place, gender, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+		INSERT INTO judokas (external_id, last_name, first_name, last_name_rus, first_name_rus, weight_category, birth_date, birth_place, gender, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`
 
 	for _, row := range rows {
 		insCtx, insCancel := context.WithTimeout(ctx, 5*time.Second)
 
 		_, err := r.db.Exec(insCtx, query,
+			row.ExternalID,
 			row.LastName,
 			row.FirstName,
 			row.LastNameRus,
