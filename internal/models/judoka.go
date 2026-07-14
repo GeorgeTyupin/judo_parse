@@ -38,6 +38,9 @@ func NewJudoka(curRow []string, lenCurTable int) Judoka {
 
 const MinJudokaRowLen = 6
 
+// judokaIDPrefix — префикс идентификатора дзюдоиста в справочнике (JUD00001).
+const judokaIDPrefix = "JUD"
+
 // JudokaDBRow — справочная запись дзюдоиста для сохранения в БД.
 type JudokaDBRow struct {
 	ExternalID     int64      `db:"external_id"`
@@ -58,7 +61,7 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 		return JudokaDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", curRow)
 	}
 
-	extID, err := strconv.ParseInt(curRow[0], 10, 64)
+	extID, err := strconv.ParseInt(strings.TrimPrefix(curRow[0], judokaIDPrefix), 10, 64)
 	if err != nil {
 		return JudokaDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", curRow[0], err)
 	}

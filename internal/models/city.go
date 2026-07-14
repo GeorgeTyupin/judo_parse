@@ -3,15 +3,13 @@ package models
 import (
 	"fmt"
 	"judo/internal/lib/utils/note/locresolver"
-	"strconv"
 	"time"
 )
 
-const MinCityRowLen int = 6
+const MinCityRowLen int = 5
 
 // CityDBRow — справочная запись города для сохранения в БД.
 type CityDBRow struct {
-	ExternalID  int64      `db:"external_id"`
 	Name        string     `db:"name"`
 	NameRus     *string    `db:"name_rus"`
 	NameRusLast *string    `db:"name_rus_last"`
@@ -30,18 +28,12 @@ func NewCityDBRow(row []string) (CityDBRow, error) {
 		return CityDBRow{}, fmt.Errorf("недопустимый формат строки: %+v", row)
 	}
 
-	extID, err := strconv.ParseInt(row[0], 10, 64)
-	if err != nil {
-		return CityDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", row[0], err)
-	}
-
 	return CityDBRow{
-		ExternalID:      extID,
-		Name:            row[1],
-		NameRus:         new(row[2]),
-		NameRusLast:     new(row[3]),
-		RepublicNameRus: row[4],
-		RepublicNameEng: row[5],
+		Name:            row[0],
+		NameRus:         new(row[1]),
+		NameRusLast:     new(row[2]),
+		RepublicNameRus: row[3],
+		RepublicNameEng: row[4],
 	}, nil
 }
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestJudokaRussifier_Russify(t *testing.T) {
-	judokaFilePath, err := filesutils.GetRootFilePath("#JUDOKA.xlsx")
+	judokaFilePath, err := filesutils.GetRootFilePath("#SPRAVOCHNIK.xlsx")
 	require.NoError(t, err)
 
 	reader, err := dictio.NewReader(judokaFilePath)
@@ -24,6 +24,7 @@ func TestJudokaRussifier_Russify(t *testing.T) {
 
 	judokas, err := dictService.ParseJudokas()
 	require.NoError(t, err)
+	require.NotEmpty(t, judokas)
 
 	judokaNames := models.JudokaRowsToNames(judokas)
 	judokaRussifier := russifiers.NewJudokaRussifier(judokaNames)
