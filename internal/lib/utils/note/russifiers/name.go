@@ -36,11 +36,11 @@ func NewJudokaRussifier(judokas []JudokaName) JudokaRussifier {
 	return JudokaRussifier(russifier)
 }
 
-func (j JudokaRussifier) Russify(firstName, lastName string) []string {
+func (j JudokaRussifier) Russify(firstName, lastName string) (names []string, found bool) {
 	fullName := fmt.Sprintf("%s %s", lastName, firstName)
 	if russified, ok := j[fullName]; ok {
-		return russified
+		return russified, true
 	}
 
-	return []string{firstName, lastName}
+	return []string{firstName, lastName}, false
 }

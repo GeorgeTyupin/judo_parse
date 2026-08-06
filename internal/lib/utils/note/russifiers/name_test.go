@@ -48,8 +48,8 @@ l:
 						break l
 					}
 					cnt++
-					got := judokaRussifier.Russify(judoka.FirstName, judoka.LastName)
-					t.Logf("%s %s -> %s %s", judoka.LastName, judoka.FirstName, got[1], got[0])
+					got, found := judokaRussifier.Russify(judoka.FirstName, judoka.LastName)
+					t.Logf("%s %s -> %s %s (found=%v)", judoka.LastName, judoka.FirstName, got[1], got[0], found)
 				}
 			}
 		}

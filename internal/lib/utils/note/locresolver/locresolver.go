@@ -57,15 +57,15 @@ func (r *LocationResolver) isCity(value string) bool {
 	return false
 }
 
-func (r *LocationResolver) SplitCountryAndClub(country, so string) (resolvedCountry, resolvedCity, resolvedClub string) {
+func (r *LocationResolver) SplitCountryAndClub(country, so string) (resolvedCountry, resolvedCity, resolvedClub string, countryFound, cityFound, clubFound bool) {
 	if country != "" {
 		switch {
 		case r.isCountry(country):
-			resolvedCountry = country
+			resolvedCountry, countryFound = country, true
 		case r.isSportClub(country):
-			resolvedClub = country
+			resolvedClub, clubFound = country, true
 		case r.isCity(country):
-			resolvedCity = country
+			resolvedCity, cityFound = country, true
 		default:
 			resolvedCountry = country
 		}
@@ -73,9 +73,9 @@ func (r *LocationResolver) SplitCountryAndClub(country, so string) (resolvedCoun
 	if so != "" {
 		switch {
 		case r.isCountry(so):
-			resolvedCountry = so
+			resolvedCountry, countryFound = so, true
 		case r.isSportClub(so):
-			resolvedClub = so
+			resolvedClub, clubFound = so, true
 		default:
 			resolvedClub = so
 		}

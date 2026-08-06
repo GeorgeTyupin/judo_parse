@@ -11,6 +11,15 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+const uniqueMarker = "*"
+
+func markIfNotFound(value string, found bool) string {
+	if value != "" && !found {
+		return uniqueMarker + value
+	}
+	return value
+}
+
 type Note struct {
 	TOURNAMENT     string
 	TOUR_TYPE      string
@@ -81,10 +90,10 @@ func NewNote(
 	var firstNameRus, lastNameRus, judokaRus string
 
 	// Транслитерация фамилии и имени
-	nameRusSlice := judokaRussifier.Russify(man.FirstName, man.LastName)
+	nameRusSlice, judokaFound := judokaRussifier.Russify(man.FirstName, man.LastName)
 	firstNameRus = nameRusSlice[0]
 	lastNameRus = nameRusSlice[1]
-	judokaRus = fmt.Sprintf("%s %s", firstNameRus, lastNameRus)
+	judokaRus = markIfNotFound(fmt.Sprintf("%s %s", firstNameRus, lastNameRus), judokaFound)
 
 	// Парсим информацию о поле и возрасте
 	genderInfo := noteutils.ParseGenderInfo(tournament.Gender)
@@ -95,7 +104,7 @@ func NewNote(
 		nameComp = "F"
 	}
 
-	country, city, sportClub := locationResolver.SplitCountryAndClub(man.Country, man.SO)
+	country, city, sportClub, countryFound, cityFound, clubFound := locationResolver.SplitCountryAndClub(man.Country, man.SO)
 	cityLast := replacers.NormalizeCityName(city)
 	republic := locationResolver.GetRepublicByCity(city)
 
@@ -122,11 +131,11 @@ func NewNote(
 		NAME_RUS:       lastNameRus,
 		FIRSTNAME_RUS:  firstNameRus,
 		JUDOKA_RUS:     judokaRus,
-		COUNTRY:        country,
-		CITY:           city,
+		COUNTRY:        markIfNotFound(country, countryFound),
+		CITY:           markIfNotFound(city, cityFound),
 		CITY_LAST:      cityLast,
 		REPUBLIC_ENG:   republic,
-		SO:             sportClub,
+		SO:             markIfNotFound(sportClub, clubFound),
 		NAME_COMP:      nameComp,
 	}
 }
