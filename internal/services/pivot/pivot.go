@@ -2,6 +2,7 @@ package pivot
 
 import (
 	"judo/internal/lib/utils/note/locresolver"
+	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
 )
@@ -10,6 +11,7 @@ func ProcessData(
 	data models.ExcelSheet,
 	judokaRussifier russifiers.JudokaRussifier,
 	columnSplitter *locresolver.LocationResolver,
+	ratingResolver ratingResolver.RatingResolver,
 ) []models.Note {
 	notes := make([]models.Note, 0)
 
@@ -23,6 +25,7 @@ func ProcessData(
 						categoryName,
 						judokaRussifier,
 						columnSplitter,
+						ratingResolver,
 					)
 					notes = append(notes, note)
 				}

@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
+	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
+	"judo/internal/services/rating"
 	"log/slog"
 	"net"
 	"slices"
@@ -43,11 +45,12 @@ const (
 )
 
 type Data struct {
-	tournaments models.ExcelSheet
-	judokas     []models.JudokaDBRow
-	cities      []models.CityDBRow
-	countries   []models.CountryDBRow
-	sportClubs  []models.SportClubDBRow
+	tournaments       models.ExcelSheet
+	judokas           []models.JudokaDBRow
+	cities            []models.CityDBRow
+	countries         []models.CountryDBRow
+	sportClubs        []models.SportClubDBRow
+	tournamentRatings ratingResolver.TournamentRatings
 }
 
 func NewData(logger *slog.Logger, files []string) (Data, error) {
@@ -72,33 +75,43 @@ func NewData(logger *slog.Logger, files []string) (Data, error) {
 		return data, fmt.Errorf("ошибка инициализации Reader - %w", err)
 	}
 
-	service := dict.NewDictService(reader, logger)
-	judokas, err := service.ParseJudokas()
+	dictService := dict.NewDictService(reader, logger)
+	judokas, err := dictService.ParseJudokas()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга дзюдоистов - %w", err)
 	}
 
-	cities, err := service.ParseCities()
+	cities, err := dictService.ParseCities()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга городов - %w", err)
 	}
 
-	countries, err := service.ParseCountries()
+	countries, err := dictService.ParseCountries()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга стран - %w", err)
 	}
 
-	sportClubs, err := service.ParseSportClubs()
+	sportClubs, err := dictService.ParseSportClubs()
 	if err != nil {
 		return data, fmt.Errorf("ошибка парсинга спортивных клубов - %w", err)
 	}
 
+	ratingService, err := rating.NewRatingService(reader, logger)
+	if err != nil {
+		return data, fmt.Errorf("ошибка создания сервиса рейтинга - %w", err)
+	}
+	ratings, err := ratingService.GetRatings()
+	if err != nil {
+		return data, fmt.Errorf("ошибка парсинга рейтингов - %w", err)
+	}
+
 	data = Data{
-		judokas:     judokas,
-		tournaments: tournaments,
-		cities:      cities,
-		countries:   countries,
-		sportClubs:  sportClubs,
+		judokas:           judokas,
+		tournaments:       tournaments,
+		cities:            cities,
+		countries:         countries,
+		sportClubs:        sportClubs,
+		tournamentRatings: ratings,
 	}
 
 	return data, nil
@@ -153,6 +166,8 @@ func (app *App) Run() error {
 	judokaNames := models.JudokaRowsToNames(app.data.judokas)
 	judokaRussifier := russifiers.NewJudokaRussifier(judokaNames)
 
+	ratingResolver := ratingResolver.NewRatingResolver(app.data.tournamentRatings)
+
 	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
 
@@ -166,7 +181,7 @@ func (app *App) Run() error {
 	}
 
 	wg.Go(func() {
-		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter)
+		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter, ratingResolver)
 		excelWriter.Write(notes)
 	})
 
@@ -184,7 +199,7 @@ func (app *App) Run() error {
 		defer dupWriter.SaveFile()
 
 		wg.Go(func() {
-			dupNotes := duplicates.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter)
+			dupNotes := duplicates.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter, ratingResolver)
 			dupWriter.Write(dupNotes)
 		})
 	}

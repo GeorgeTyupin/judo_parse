@@ -31,6 +31,9 @@ func (r *Reader) Read() (map[string][][]string, error) {
 	sheetList := r.File.GetSheetList()
 
 	for _, curSheet := range sheetList {
+		if curSheet[0] == '_' {
+			continue
+		}
 		rows, err := r.File.GetRows(curSheet)
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочесть строки в файле %s в листе %s, возникла ошибка %w", r.fileName, curSheet, err)

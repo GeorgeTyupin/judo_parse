@@ -5,6 +5,7 @@ import (
 	"judo/internal/lib/replacers"
 	noteutils "judo/internal/lib/utils/note"
 	"judo/internal/lib/utils/note/locresolver"
+	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"strings"
 
@@ -49,6 +50,7 @@ type Note struct {
 	REPUBLIC_ENG   string
 	SO             string
 	NAME_COMP      string
+	RATING         string
 }
 
 func NewNote(
@@ -57,6 +59,7 @@ func NewNote(
 	categoryName string,
 	judokaRussifier russifiers.JudokaRussifier,
 	locationResolver *locresolver.LocationResolver,
+	ratingResolver ratingResolver.RatingResolver,
 ) Note {
 	descParts := strings.Split(tournament.Description, "—")
 	tourType := strings.TrimSpace(noteutils.SafeGet(descParts, 0))
@@ -137,6 +140,7 @@ func NewNote(
 		REPUBLIC_ENG:   republic,
 		SO:             markIfNotFound(sportClub, clubFound),
 		NAME_COMP:      nameComp,
+		RATING:         ratingResolver.Resolve(tourType, man.Rank),
 	}
 }
 
@@ -171,4 +175,5 @@ func (note Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.REPUBLIC_ENG)
 	table.SetCellValue("Sheet1", fmt.Sprintf("AA%d", rowNum), note.SO)
 	table.SetCellValue("Sheet1", fmt.Sprintf("AB%d", rowNum), note.NAME_COMP)
+	table.SetCellValue("Sheet1", fmt.Sprintf("AC%d", rowNum), note.RATING)
 }

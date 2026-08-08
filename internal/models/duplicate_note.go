@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"judo/internal/lib/utils/note/locresolver"
+	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
 	"judo/internal/lib/utils/note/russifiers"
 
 	"github.com/xuri/excelize/v2"
@@ -20,9 +21,17 @@ func NewDuplicateNote(tournament Tournament,
 	dupType,
 	original string,
 	judokaRussifier russifiers.JudokaRussifier,
-	columnSplitter *locresolver.LocationResolver) DuplicateNote {
+	columnSplitter *locresolver.LocationResolver,
+	ratingResolver ratingResolver.RatingResolver,
+) DuplicateNote {
 	return DuplicateNote{
-		Note:           NewNote(tournament, man, categoryName, judokaRussifier, columnSplitter),
+		Note: NewNote(tournament,
+			man,
+			categoryName,
+			judokaRussifier,
+			columnSplitter,
+			ratingResolver,
+		),
 		DuplicateType:  dupType,
 		OriginalJudoka: original,
 	}
