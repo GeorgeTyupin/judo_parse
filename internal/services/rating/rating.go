@@ -18,8 +18,8 @@ const (
 	headerRowIdx    = 0
 	firstDataRowIdx = 1
 
-	tourTypeColIdx   = 6 // колонка G — Tour type
-	firstPlaceColIdx = 7 // колонка H — начало колонок с местами (1, 2, 3, 5, 7...)
+	tourTypeColIdx   = 2 // колонка C — Tour type
+	firstPlaceColIdx = 3 // колонка D — начало колонок с местами (1, 2, 3, 5, 7...)
 )
 
 type RatingService struct {
