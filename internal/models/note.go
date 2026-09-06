@@ -90,13 +90,12 @@ func NewNote(
 		wc = strings.Join(catParts[1:], " ")
 	}
 
-	var firstNameRus, lastNameRus, judokaRus string
+	var firstNameRus, lastNameRus string
 
 	// Транслитерация фамилии и имени
 	nameRusSlice, judokaFound := judokaRussifier.Russify(man.FirstName, man.LastName)
 	firstNameRus = nameRusSlice[0]
 	lastNameRus = nameRusSlice[1]
-	judokaRus = markIfNotFound(fmt.Sprintf("%s %s", firstNameRus, lastNameRus), judokaFound)
 
 	// Парсим информацию о поле и возрасте
 	genderInfo := noteutils.ParseGenderInfo(tournament.Gender)
@@ -130,10 +129,10 @@ func NewNote(
 		RANK:           man.Rank,
 		NAME:           man.LastName,
 		FIRSTNAME:      man.FirstName,
-		JUDOKA:         man.JUDOKA,
+		JUDOKA:         markIfNotFound(man.JUDOKA, judokaFound),
 		NAME_RUS:       lastNameRus,
 		FIRSTNAME_RUS:  firstNameRus,
-		JUDOKA_RUS:     judokaRus,
+		JUDOKA_RUS:     fmt.Sprintf("%s %s", firstNameRus, lastNameRus),
 		COUNTRY:        markIfNotFound(country, countryFound),
 		CITY:           markIfNotFound(city, cityFound),
 		CITY_LAST:      cityLast,

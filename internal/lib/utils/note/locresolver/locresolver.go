@@ -1,5 +1,7 @@
 package locresolver
 
+import "strings"
+
 type CityInput struct {
 	City     string
 	Republic string
@@ -25,7 +27,7 @@ func NewLocationResolver(countries []string, cities []CityInput, sportClubs []st
 	}
 
 	for _, sportClub := range sportClubs {
-		sportClubsSet[sportClub] = struct{}{}
+		sportClubsSet[strings.ToUpper(sportClub)] = struct{}{}
 	}
 
 	resolver := &LocationResolver{
@@ -37,7 +39,7 @@ func NewLocationResolver(countries []string, cities []CityInput, sportClubs []st
 }
 
 func (r *LocationResolver) isSportClub(value string) bool {
-	if _, ok := r.sportClubs[value]; ok {
+	if _, ok := r.sportClubs[strings.ToUpper(value)]; ok {
 		return true
 	}
 	return false
@@ -68,6 +70,7 @@ func (r *LocationResolver) SplitCountryAndClub(country, so string) (resolvedCoun
 			resolvedCity, cityFound = country, true
 		default:
 			resolvedCountry = country
+			resolvedCity = country
 		}
 	}
 	if so != "" {
