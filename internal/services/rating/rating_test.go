@@ -8,46 +8,35 @@ import (
 	filesutils "judo/internal/lib/utils/files"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 const dictFileName string = "#SPRAVOCHNIK.xlsx"
 
-type RatingServiceTestSuite struct {
-	service *RatingService
-	suite.Suite
-}
-
-func (s *RatingServiceTestSuite) SetupSuite() {
+func TestRatingsParsing(t *testing.T) {
 	filePath, err := filesutils.GetRootFilePath(dictFileName)
-	require.NoError(s.T(), err)
+	require.NoError(t, err)
 
 	reader, err := dictio.NewReader(filePath)
-	require.NoError(s.T(), err)
+	require.NoError(t, err)
 
-	s.service, err = NewRatingService(reader, slog.Default())
-	require.NoError(s.T(), err)
-	require.NotNil(s.T(), s.service)
-}
+	service, err := NewRatingService(reader, slog.Default())
+	require.NoError(t, err)
+	require.NotNil(t, service)
 
-func (s *RatingServiceTestSuite) TestRatingsParsing() {
-	ratings, err := s.service.GetRatings()
-	require.NoError(s.T(), err)
-	require.NotEmpty(s.T(), ratings)
+	ratings, err := service.GetRatings()
+	require.NoError(t, err)
+	require.NotEmpty(t, ratings)
 
 	i := 0
 	for tourType, places := range ratings {
-		require.NotEmpty(s.T(), places)
+		require.NotEmpty(t, places)
 
 		if i >= 10 {
 			break
 		}
 		i++
+		
 
-		s.T().Logf("Тип турнира №%d: %v\n Места и рейтинг - %v\n\n", i, tourType, places)
+		t.Logf("Тип турнира №%d: %v\n Места и рейтинг - %v\n\n", i, tourType, places)
 	}
-}
-
-func TestRatingServiceSuite(t *testing.T) {
-	suite.Run(t, new(RatingServiceTestSuite))
 }
