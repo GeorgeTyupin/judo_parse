@@ -34,7 +34,7 @@ func (r *Reader) Read() (map[string][][]string, error) {
 		if curSheet[0] == '_' {
 			continue
 		}
-		rows, err := r.File.GetRows(curSheet)
+		rows, err := r.File.GetRows(curSheet, excelize.Options{RawCellValue: true})
 		if err != nil {
 			return nil, fmt.Errorf("не удалось прочесть строки в файле %s в листе %s, возникла ошибка %w", r.fileName, curSheet, err)
 		}

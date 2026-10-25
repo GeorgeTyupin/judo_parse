@@ -33,6 +33,11 @@ func (t *ExcelWriter) setHeader() {
 		col, _ := excelize.ColumnNumberToName(i + 1)
 		t.File.SetCellValue("Sheet1", col+"1", header)
 	}
+
+	dateFormat := "dd.mm.yyyy"
+	dateStyle, _ := t.File.NewStyle(&excelize.Style{CustomNumFmt: &dateFormat})
+	t.File.SetColStyle("Sheet1", "AB", dateStyle)
+	t.File.SetColWidth("Sheet1", "AB", "AB", 12)
 }
 
 func (t *ExcelWriter) SaveFile() {

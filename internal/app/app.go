@@ -16,6 +16,7 @@ import (
 	parseio "judo/internal/io/excel/parse"
 	jsonio "judo/internal/io/json"
 	filesutils "judo/internal/lib/utils/files"
+	birthdateResolver "judo/internal/lib/utils/note/birthdate_resolver"
 	"judo/internal/lib/utils/note/locresolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"judo/internal/models"
@@ -167,6 +168,7 @@ func (app *App) Run() error {
 	judokaRussifier := russifiers.NewJudokaRussifier(judokaNames)
 
 	ratingResolver := ratingResolver.NewRatingResolver(app.data.tournamentRatings)
+	birthDateResolver := birthdateResolver.NewBirthDateResolver(app.data.judokas)
 
 	excelWriter := parseio.NewWriter("Сводная таблица", app.logger)
 	defer excelWriter.SaveFile()
@@ -181,7 +183,7 @@ func (app *App) Run() error {
 	}
 
 	wg.Go(func() {
-		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter, ratingResolver)
+		notes := pivot.ProcessData(app.data.tournaments, judokaRussifier, columnSplitter, ratingResolver, birthDateResolver)
 		excelWriter.Write(notes)
 	})
 

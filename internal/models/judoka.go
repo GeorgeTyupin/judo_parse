@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xuri/excelize/v2"
 )
 
 // Judoka — структура для парсинга данных из турнирных таблиц.
@@ -66,13 +68,50 @@ func NewJudokaDBRow(curRow []string) (JudokaDBRow, error) {
 		return JudokaDBRow{}, fmt.Errorf("недопустимый external_id %q: %w", curRow[0], err)
 	}
 
+	var birthDate *string
+	if len(curRow) > 6 {
+		birthDate = parseJudokaBirthDate(curRow[6])
+	}
+
 	return JudokaDBRow{
 		ExternalID:   extID,
 		LastName:     curRow[1],
 		FirstName:    curRow[2],
 		LastNameRus:  new(curRow[4]),
 		FirstNameRus: new(curRow[5]),
+		BirthDate:    birthDate,
 	}, nil
+}
+
+// parseJudokaBirthDate возвращает полную дату рождения в формате YYYY-MM-DD.
+func parseJudokaBirthDate(value string) *string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+
+	var date time.Time
+	var err error
+	if serial, parseErr := strconv.ParseFloat(value, 64); parseErr == nil {
+		if serial <= 0 {
+			return nil
+		}
+		date, err = excelize.ExcelDateToTime(serial, false)
+	} else {
+		// В справочнике встречаются периоды жизни: DOB — дата смерти.
+		birthDate := strings.FieldsFunc(value, func(r rune) bool {
+			return r == '-' || r == '–' || r == '—'
+		})
+		if len(birthDate) == 0 {
+			return nil
+		}
+		date, err = time.Parse("02.01.2006", strings.ReplaceAll(birthDate[0], " ", ""))
+	}
+	if err != nil {
+		return nil
+	}
+
+	return new(date.Format(time.DateOnly))
 }
 
 func JudokaRowsToNames(judokaDBRows []JudokaDBRow) []russifiers.JudokaName {

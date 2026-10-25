@@ -8,6 +8,7 @@ import (
 	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
 	"judo/internal/lib/utils/note/russifiers"
 	"strings"
+	"time"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -49,6 +50,7 @@ type Note struct {
 	CITY_LAST      string
 	REPUBLIC_ENG   string
 	SO             string
+	DOB            *time.Time
 	NAME_COMP      string
 	RATING         string
 }
@@ -173,6 +175,9 @@ func (note Note) SaveNote(table *excelize.File, counter int) {
 	table.SetCellValue("Sheet1", fmt.Sprintf("Y%d", rowNum), note.CITY_LAST)
 	table.SetCellValue("Sheet1", fmt.Sprintf("Z%d", rowNum), note.REPUBLIC_ENG)
 	table.SetCellValue("Sheet1", fmt.Sprintf("AA%d", rowNum), note.SO)
-	table.SetCellValue("Sheet1", fmt.Sprintf("AB%d", rowNum), note.NAME_COMP)
-	table.SetCellValue("Sheet1", fmt.Sprintf("AC%d", rowNum), note.RATING)
+	if note.DOB != nil {
+		table.SetCellValue("Sheet1", fmt.Sprintf("AB%d", rowNum), *note.DOB)
+	}
+	table.SetCellValue("Sheet1", fmt.Sprintf("AC%d", rowNum), note.NAME_COMP)
+	table.SetCellValue("Sheet1", fmt.Sprintf("AD%d", rowNum), note.RATING)
 }

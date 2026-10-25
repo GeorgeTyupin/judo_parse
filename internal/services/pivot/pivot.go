@@ -1,6 +1,7 @@
 package pivot
 
 import (
+	birthdateResolver "judo/internal/lib/utils/note/birthdate_resolver"
 	"judo/internal/lib/utils/note/locresolver"
 	ratingResolver "judo/internal/lib/utils/note/rating_resolver"
 	"judo/internal/lib/utils/note/russifiers"
@@ -12,6 +13,7 @@ func ProcessData(
 	judokaRussifier russifiers.JudokaRussifier,
 	columnSplitter *locresolver.LocationResolver,
 	ratingResolver ratingResolver.RatingResolver,
+	birthDateResolver birthdateResolver.BirthDateResolver,
 ) []models.Note {
 	notes := make([]models.Note, 0)
 
@@ -27,6 +29,7 @@ func ProcessData(
 						columnSplitter,
 						ratingResolver,
 					)
+					note.DOB = birthDateResolver.Resolve(man.FirstName, man.LastName)
 					notes = append(notes, note)
 				}
 			}
